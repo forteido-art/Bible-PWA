@@ -1,0 +1,8 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: system-ui; background: #1a1a1a; color: #e5e5e5; }
+header { background: #0f0f0f; padding: 1rem; position: sticky; top: 0; }
+h1 { font-size: 1.2rem; margin-bottom:.5rem; text-align: center; }
+select { width: 48%; padding:.5rem; margin: 1%; background: #2a2a2a; color: #fff; border: 1px solid #444; }
+#verseContainer { padding: 1rem; line-height: 1.8; }
+.verse { margin-bottom:.75rem; }
+.verse-num { color: #888; font-size:.8rem; margin-right:.5rem; }
