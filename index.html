@@ -2,44 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KJV Bible PWA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Holy Bible KJV</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
   <style>
-    body { font-family: system-ui; margin: 0; padding: 0; line-height: 1.6; }
-    header { position: sticky; top: 0; background: #fff; padding: 8px; border-bottom: 1px solid #ddd; z-index: 10; }
-   .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-    select, input, button { padding: 6px; font-size: 16px; }
-    #search { flex: 1; min-width: 200px; }
-    #search-results { position: absolute; background: #fff; border: 1px solid #ccc; max-height: 400px; overflow-y: auto; width: 100%; display: none; z-index: 20; }
-   .search-result { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
-   .search-result:hover { background: #f5f5f5; }
-    #verses { padding: 16px; max-width: 800px; margin: 0 auto; }
-   .verse { padding: 4px 0; cursor: pointer; }
-   .verse:hover { background: #f9f9f9; }
-   .verse sup { color: #666; font-size: 0.8em; margin-right: 6px; user-select: none; }
-   .highlighted { background: #fff8c5; }
-   .red { color: #c00; }
-   .note-icon { margin-left: 6px; cursor: help; }
-    #current-ref { font-weight: bold; font-size: 1.2em; }
+    :root {
+      --bg: #0f172a;
+      --bg-elev: #1e293b;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --accent: #38bdf8;
+      --highlight: #facc15;
+      --red: #ef4444;
+      --border: #334155;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --bg-elev: #f8fafc;
+        --text: #0f172a;
+        --text-dim: #475569;
+        --accent: #0284c7;
+        --highlight: #fef08a;
+        --red: #dc2626;
+        --border: #e2e8f0;
+      }
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 18px;
+    }
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg-elev);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+   .toolbar {
+      display: flex; gap: 8px; padding: 12px; align-items: center;
+      max-width: 900px; margin: 0 auto;
+    }
+   .nav-btn {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer;
+    }
+   .nav-btn:active { transform: scale(0.95); }
+    select {
+      flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      padding: 8px 12px; border-radius: 8px; font-size: 16px; font-family: inherit;
+      appearance: none;
+    }
+    #current-ref {
+      font-weight: 600; font-size: 18px; text-align: center;
+      min-width: 120px;
+    }
+   .search-wrap { position: relative; padding: 0 12px 12px; max-width: 900px; margin: 0 auto; }
+    #search {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      padding: 12px 16px; border-radius: 12px; font-size: 16px; font-family: inherit;
+    }
+    #search:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    #search-results {
+      position: absolute; top: 100%; left: 12px; right: 12px;
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px;
+      max-height: 60vh; overflow-y: auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+   .search-result {
+      padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+   .search-result:last-child { border-bottom: none; }
+   .search-result:hover { background: var(--bg); }
+   .search-result b { color: var(--accent); }
+    main {
+      max-width: 700px; margin: 0 auto; padding: 24px 20px 80px;
+    }
+   .verse {
+      padding: 4px 0; margin: 0; text-indent: -2.5em; padding-left: 2.5em;
+      cursor: pointer; border-radius: 4px;
+    }
+   .verse:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+   .verse sup {
+      font-size: 0.7em; color: var(--text-dim); font-weight: 600;
+      margin-right: 8px; user-select: none; font-family: ui-sans-serif, system-ui;
+    }
+   .highlighted { background: color-mix(in srgb, var(--highlight) 40%, transparent); }
+   .red { color: var(--red); }
+   .note-icon {
+      font-size: 0.8em; margin-left: 8px; opacity: 0.7;
+      vertical-align: super;
+    }
+   .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+   .modal-content {
+      background: var(--bg-elev); border: 1px solid var(--border); border-radius: 16px;
+      width: 100%; max-width: 400px; padding: 20px;
+    }
+   .modal h3 { margin: 0 0 12px; font-size: 18px; }
+   .modal button,.modal textarea {
+      width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px;
+      font-size: 16px; font-family: inherit;
+    }
+   .modal textarea {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      min-height: 100px; resize: vertical;
+    }
+   .modal button {
+      background: var(--accent); color: #fff; border: none; font-weight: 600; cursor: pointer;
+    }
+   .modal button.secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+   .fab {
+      position: fixed; bottom: 20px; right: 20px; z-index: 50;
+      background: var(--accent); color: #fff; border: none;
+      width: 56px; height: 56px; border-radius: 50%; font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <header>
-    <div class="controls">
-      <button id="prev-ch">←</button>
+    <div class="toolbar">
+      <button class="nav-btn" id="prev-ch">‹</button>
       <select id="book-select"></select>
       <select id="chapter-select"></select>
-      <button id="next-ch">→</button>
-      <span id="current-ref"></span>
+      <button class="nav-btn" id="next-ch">›</button>
     </div>
-    <div class="controls">
-      <input id="search" type="search" placeholder="Search KJV...">
-      <button onclick="exportData()">Export Notes</button>
+    <div class="search-wrap">
+      <input id="search" type="search" placeholder="Search Scripture...">
+      <div id="search-results"></div>
     </div>
-    <div id="search-results"></div>
   </header>
-  <main id="verses"></main>
+  <main>
+    <h1 id="current-ref"></h1>
+    <div id="verses"></div>
+  </main>
+
+  <button class="fab" id="menu-btn" title="Menu">⋮</button>
+
+  <div class="modal" id="verse-modal">
+    <div class="modal-content">
+      <h3 id="modal-ref"></h3>
+      <button id="btn-highlight">Toggle Highlight</button>
+      <textarea id="note-input" placeholder="Add a note..."></textarea>
+      <button id="btn-save-note">Save Note</button>
+      <button class="secondary" id="btn-close-modal">Close</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
