@@ -4,14 +4,16 @@ const versesDiv = document.getElementById('verseContainer');
 
 // Add search + theme button to header
 const header = document.querySelector('header');
-const controls = document.createElement('div');
-controls.className = 'controls';
-controls.innerHTML = `
-  <input id="searchInput" placeholder="Search Bible">
-  <button id="searchBtn">Search</button>
-  <button id="themeBtn">🌙</button>
-`;
-header.appendChild(controls);
+if (!document.getElementById('searchInput')) {
+  const controls = document.createElement('div');
+  controls.className = 'controls';
+  controls.innerHTML = `
+    <input id="searchInput" placeholder="Search Bible">
+    <button id="searchBtn">Search</button>
+    <button id="themeBtn">🌙</button>
+  `;
+  header.appendChild(controls);
+}
 
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
@@ -29,6 +31,7 @@ themeBtn.onclick = () => {
 };
 
 // Populate books
+bookSel.innerHTML = '';
 Object.keys(KJV).forEach(book => {
   bookSel.add(new Option(book, book));
 });
@@ -37,7 +40,7 @@ Object.keys(KJV).forEach(book => {
 function loadChapters() {
   const book = bookSel.value;
   chapSel.innerHTML = '';
-  Object.keys(KJV).forEach(ch => {
+  Object.keys(KJV[book]).forEach(ch => {
     chapSel.add(new Option(ch, ch));
   });
   loadVerses();
@@ -47,10 +50,10 @@ function loadChapters() {
 function loadVerses() {
   const book = bookSel.value;
   const chap = chapSel.value;
-  if (!KJV) return;
+  if (!KJV[book] ||!KJV[book][chap]) return;
   versesDiv.innerHTML = `<h2 class="chapter-title">${book} ${chap}</h2>`;
-  const verses = KJV[chap];
-  Object.keys(verses).forEach(v => {
+  const verses = KJV[book][chap];
+  Object.keys(verses).sort((a,b) => +a - +b).forEach(v => {
     const p = document.createElement('p');
     p.className = 'verse';
     p.id = `v${v}`;
@@ -71,19 +74,20 @@ function search() {
   versesDiv.innerHTML = '<h2 class="chapter-title">Search Results</h2>';
   let count = 0;
   for (const book in KJV) {
-    for (const ch in KJV) {
-      for (const v in KJV) {
-        if (KJV.toLowerCase().includes(q)) {
+    for (const ch in KJV[book]) {
+      for (const v in KJV[book][ch]) {
+        const text = KJV[book][ch][v];
+        if (text.toLowerCase().includes(q)) {
           const div = document.createElement('div');
           div.className = 'search-result';
-          div.innerHTML = `<div class="search-ref">${book} ${ch}:${v}</div>${KJV}`;
+          div.innerHTML = `<div class="search-ref">${book} ${ch}:${v}</div>${text}`;
           div.onclick = () => {
             bookSel.value = book;
             loadChapters();
             chapSel.value = ch;
             loadVerses();
             setTimeout(() => {
-              document.getElementById(`v${v}`)?.scrollIntoView({behavior:'smooth'});
+              document.getElementById(`v${v}`)?.scrollIntoView({behavior:'smooth', block:'center'});
               document.getElementById(`v${v}`)?.classList.add('highlight');
             }, 100);
           };
