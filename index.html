@@ -83,35 +83,51 @@ header h1 {
 /* TOOLBAR - THIS WAS THE MAIN ISSUE */
 .toolbar {
   display: flex; 
+  flex-wrap: wrap; /* KEY FIX: allows dropdowns to go to next line */
   gap: 8px; 
   padding: 12px; 
   align-items: center;
-  overflow-x: auto; /* allows sideways scroll */
-  white-space: nowrap;
   width: 100%;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
-.toolbar::-webkit-scrollbar { display: none; } /* hide scroll bar */
-.toolbar select, .toolbar button {
-  flex-shrink: 0; /* prevents squishing */
-  padding: 10px 14px;
+
+.toolbar select {
+  flex: 1 1 120px; /* grows, shrinks, min 120px */
+  min-width: 100px;
+  padding: 10px;
   background: var(--bg-elev);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 15px;
-  min-height: 42px;
+}
+
+.toolbar .search {
+  flex: 2 1 200px; /* search takes 2x more space */
+  min-width: 180px;
+  padding: 10px;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.toolbar .nav-btn {
+  flex-shrink: 0;
+  padding: 10px 14px;
 }
 
 /* BIBLE TEXT */
 .bible-text {
-  padding: 16px;
+  padding: 16px 20px; /* 20px left/right space */
   max-width: 800px;
   margin: 0 auto;
 }
 .verse {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  line-height: 1.9;
 }
 
 /* POPUP / MODAL - FIXES THE SPILL */
@@ -168,6 +184,19 @@ header h1 {
 }
 .donate-btn:active {
   transform: scale(0.95);
+}
+@media (max-width: 600px) {
+  .toolbar {
+    flex-direction: column; /* stack everything on small screens */
+    align-items: stretch;
+  }
+  .toolbar select, .toolbar .search, .toolbar .nav-btn {
+    width: 100%; /* full width */
+    min-width: unset;
+  }
+  .bible-text {
+    padding: 12px 16px; /* slightly smaller padding on phone */
+  }
 }
 </style>
 </head>
