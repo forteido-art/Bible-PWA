@@ -83,47 +83,44 @@ header h1 {
 /* TOOLBAR - THIS WAS THE MAIN ISSUE */
 .toolbar {
   display: flex; 
-  flex-wrap: wrap; /* KEY FIX: allows dropdowns to go to next line */
-  gap: 8px; 
+  flex-wrap: wrap; /* allows wrapping */
+  gap: 10px; 
   padding: 12px; 
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
-.toolbar select {
-  flex: 1 1 120px; /* grows, shrinks, min 120px */
-  min-width: 100px;
-  padding: 10px;
+/* Make all items share 1 row on big screens, 2 rows on phone */
+.toolbar > * {
+  flex: 1 1 150px; /* grow shrink basis 150px */
+  min-width: 120px;
+}
+
+.toolbar select, .toolbar input[type="search"] {
+  padding: 12px;
   background: var(--bg-elev);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 15px;
+  width: 100%; /* fill their flex space */
 }
 
-.toolbar .search {
-  flex: 2 1 200px; /* search takes 2x more space */
-  min-width: 180px;
-  padding: 10px;
-  background: var(--bg-elev);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 15px;
-}
-
-.toolbar .nav-btn {
-  flex-shrink: 0;
-  padding: 10px 14px;
+.toolbar button {
+  padding: 12px;
+  flex: 0 0 50px; /* prev/next buttons stay small */
 }
 
 /* BIBLE TEXT */
 .bible-text {
-  padding: 16px 20px; /* 20px left/right space */
+  padding: 20px 16px; /* 20px top/bottom, 16px left/right */
   max-width: 800px;
   margin: 0 auto;
+}
+h1.chapter-title {
+  padding: 0 16px; /* space for "1 Samuel 1" title too */
 }
 .verse {
   margin-bottom: 16px;
