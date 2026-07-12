@@ -153,12 +153,30 @@ header h1 {
   .toolbar select, .toolbar button { padding: 8px 10px; font-size: 14px; }
   .bible-text { padding: 12px; }
 }
+
+.donate-btn {
+  background: linear-gradient(135deg, #00c853, #009624);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: sans-serif;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,200,83,0.3);
+}
+.donate-btn:active {
+  transform: scale(0.95);
+}
 </style>
 </head>
 <body>
-<header style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #333; background:#111; position:sticky; top:0; z-index:10;">
+<header style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid var(--border); background:var(--bg-elev);">
   <img src="logo.png" alt="Bible Logo" style="width:42px; height:42px; border-radius:12px; object-fit:cover;">
-  <h1 style="margin:0; font-size:20px; color:#fff; font-family:sans-serif;">Holy Bible KJV</h1>
+  <h1 style="margin:0; font-size:20px; flex-grow:1;">Holy Bible KJV</h1>
+  
+  <a href="https://paystack.shop/pay/season-of-mercy" target="_blank" rel="noopener" class="donate-btn">Donate</a>
 </header>
   <header>
     <div class="toolbar">
