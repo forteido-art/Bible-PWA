@@ -103,8 +103,26 @@ header h1 {
 /* MOBILE: stack everything */
 @media (max-width: 700px) {
   .toolbar {
-    grid-template-columns: 1fr; /* 1 column on phone */
+    display: flex;
+    flex-direction: column;
   }
+}
+
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+}
+
+.search-wrap {
+  padding: 10px;
 }
 
 /* BIBLE TEXT */
@@ -192,43 +210,48 @@ h1.chapter-title {
 </style>
 </head>
 <body>
-<header style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid var(--border); background:var(--bg-elev);">
-  <img src="logo.png" alt="Bible Logo" style="width:42px; height:42px; border-radius:12px; object-fit:cover;">
-  <h1 style="margin:0; font-size:20px; flex-grow:1;">Holy Bible KJV</h1>
-  
-  <a href="https://paystack.shop/pay/season-of-mercy" target="_blank" rel="noopener" class="donate-btn">Donate</a>
+
+<header class="topbar">
+  <img src="logo.png" alt="Bible Logo">
+  <h1>Holy Bible KJV</h1>
+  <a href="https://paystack.shop/pay/season-of-mercy" target="_blank" class="donate-btn">Donate</a>
 </header>
-  <header>
+
 <div class="toolbar">
-  <button class="nav-btn"><</button>
+  <button class="nav-btn" id="prev-btn">&lt;</button>
+
   <select id="book-select"></select>
   <select id="chapter-select"></select>
   <select id="verse-select"></select>
-  <input type="search" class="search" placeholder="Search...">
-  <button class="nav-btn">></button>
+
+  <input id="search" type="search" placeholder="Search...">
+
+  <button class="nav-btn" id="next-btn">&gt;</button>
 </div>
-    <div class="search-wrap">
-      <input id="search" type="search" placeholder="Search...">
-      <div id="search-results"></div>
-    </div>
-  </header>
-  <main>
-    <h1 id="current-ref"></h1>
-    <div id="verses"></div>
-  </main>
 
-  <button class="fab" id="menu-btn" title="Menu">⋮</button>
+<div class="search-wrap">
+  <div id="search-results"></div>
+</div>
 
-  <div class="modal" id="verse-modal">
-    <div class="modal-content">
-      <h3 id="modal-ref"></h3>
-      <button id="btn-highlight">Toggle Highlight</button>
-      <textarea id="note-input" placeholder="Add a note..."></textarea>
-      <button id="btn-save-note">Save Note</button>
-      <button class="secondary" id="btn-close-modal">Close</button>
-    </div>
-  </div>
+<main class="bible-text">
+  <h1 id="current-ref"></h1>
+  <div id="verses"></div>
+</main>
 
-  <script src="app.js"></script>
+<button class="fab" id="menu-btn">⋮</button>
+
+<div class="modal" id="verse-modal">
+  <h3 id="modal-ref"></h3>
+
+  <button id="btn-highlight">Toggle Highlight</button>
+
+  <textarea id="note-input" placeholder="Add a note..."></textarea>
+
+  <button id="btn-save-note">Save Note</button>
+  <button id="btn-close-modal">Close</button>
+</div>
+
+<script src="app.js"></script>
+
 </body>
 </html>
