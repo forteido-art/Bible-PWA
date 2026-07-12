@@ -280,9 +280,7 @@ function navChapter(dir) {
   const newIdx = idx + dir;
 
   if (newIdx >= 0 && newIdx < chapters.length) {
-    loadChapter(currentBook,document.getElementById("book-select").value = currentBook;
- chapters[newIdx] document.getElementById("chapter-select").value = currentChapter;);
-    
+  loadChapter(currentBook, chapters[newIdx]);
  } else {
     const books = Object.keys(KJV);
     const bookIdx = books.indexOf(currentBook);
