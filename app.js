@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   restoreLastRead();
   renderBookSelector();
-  renderChapterSelector();
+  renderChapterSelector(); // now KJV is loaded so this works
   renderChapter();
   registerServiceWorker();
 });
@@ -27,6 +27,11 @@ async function loadBible() {
   document.head.appendChild(script);
   await new Promise(resolve => script.onload = resolve);
   KJV = window.KJV;
+
+  // FIX 1: Safety check. If bible.js didn't load, don't crash
+  if(!KJV || Object.keys(KJV).length === 0) {
+    document.getElementById('verses').innerHTML = '<p>Error: bible.js not loaded</p>';
+  }
 }
 
 function registerServiceWorker() {
@@ -63,11 +68,12 @@ function searchVerses(query, limit = 50) {
   const q = query.toLowerCase();
   const words = q.split(' ').filter(w => w.length > 1);
   return verseIndex
-  .filter(v => words.every(w => v.text.includes(w)))
-  .slice(0, limit);
+ .filter(v => words.every(w => v.text.includes(w)))
+ .slice(0, limit);
 }
 
-// === 4. RENDERING - FIXED DROPDOWNS ===
+// === 4. RENDERING - WITH VERSE DROPDOWN ===
+
 function renderBookSelector() {
   const books = Object.keys(KJV);
   const select = document.getElementById('book-select');
@@ -76,26 +82,53 @@ function renderBookSelector() {
 }
 
 function renderChapterSelector() {
+  if(!KJV[currentBook]) return;
   const chapters = Object.keys(KJV[currentBook]).map(Number).sort((a,b)=>a-b);
   const select = document.getElementById('chapter-select');
-  select.innerHTML = chapters.map(c => `<option value="${c}">${c}</option>`).join('');
+  select.innerHTML = chapters.map(c => `<option value="${c}">Chapter ${c}</option>`).join('');
   select.value = currentChapter;
+
+  // NEW: Also render verses when chapter changes
+  renderVerseSelector();
 }
 
-function loadChapter(book, chapter) {
+function renderVerseSelector() { // NEW FUNCTION
+  if(!KJV[currentBook] ||!KJV[currentBook][currentChapter]) return;
+  const verses = Object.keys(KJV[currentBook][currentChapter]).map(Number).sort((a,b)=>a-b);
+  const select = document.getElementById('verse-select');
+  select.innerHTML = '<option value="">Go to Verse</option>'; // default option
+  select.innerHTML += verses.map(v => `<option value="${v}">Verse ${v}</option>`).join('');
+  select.value = ""; // reset to default
+}
+
+function loadChapter(book, chapter, verse = null) {
   currentBook = book;
   currentChapter = +chapter;
   localStorage.setItem('kjv-last-read', JSON.stringify({book, chapter}));
   renderChapterSelector();
   renderChapter();
+
+  // NEW: Scroll to verse if provided
+  if(verse) {
+    requestAnimationFrame(() => {
+      const verseEl = document.querySelector(`[data-id="${book}-${chapter}-${verse}"]`);
+      if(verseEl) {
+        verseEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        verseEl.classList.add("search-hit");
+        setTimeout(() => { verseEl.classList.remove("search-hit"); }, 2000);
+      }
+    });
+  }
+
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
 function renderChapter() {
   const container = document.getElementById('verses');
   const verses = KJV[currentBook][currentChapter];
-  const isGospel = GOSPELS.includes(currentBook);
+  if(!verses) return;
 
+  const isGospel = GOSPELS.includes(currentBook);
   document.getElementById('current-ref').textContent = `${currentBook} ${currentChapter}`;
 
   container.innerHTML = Object.entries(verses).map(([v, text]) => {
@@ -152,39 +185,29 @@ function closeModal() {
 
 // === 6. COPY WITH REFERENCE ===
 document.addEventListener("copy", e => {
-
     const selection = window.getSelection();
-
     if (!selection.rangeCount) return;
-
     let el = selection.anchorNode;
-
-    if (el.nodeType === 3)
-        el = el.parentElement;
-
+    if (el.nodeType === 3) el = el.parentElement;
     const verse = el.closest(".verse");
-
     if (!verse) return;
-
     const [book, ch, v] = verse.dataset.id.split("-");
-
-    const text = verse.innerText
-        .replace(/^\d+\s*/, "")
-        .trim();
-
-    e.clipboardData.setData(
-        "text/plain",
-        `${book} ${ch}:${v}\n\n${text}\n\n(KJV)`
-    );
-
+    const text = verse.innerText.replace(/^\d+\s*/, "").trim();
+    e.clipboardData.setData("text/plain", `${book} ${ch}:${v}\n\n${text}\n\n(KJV)`);
     e.preventDefault();
-
 });
 
 // === 7. EVENT LISTENERS ===
 function setupEventListeners() {
   document.getElementById('book-select').onchange = e => loadChapter(e.target.value, 1);
   document.getElementById('chapter-select').onchange = e => loadChapter(currentBook, e.target.value);
+  
+  // NEW: Verse dropdown listener
+  document.getElementById('verse-select').onchange = e => {
+    const verse = e.target.value;
+    if(verse) loadChapter(currentBook, currentChapter, verse);
+  }
+
   document.getElementById('prev-ch').onclick = () => navChapter(-1);
   document.getElementById('next-ch').onclick = () => navChapter(1);
 
@@ -198,11 +221,33 @@ function setupEventListeners() {
       return;
     }
     resultsDiv.style.display = 'block';
-    resultsDiv.innerHTML = results.map(r =>
-    <div class="search-result"
-     data-book="${r.book}"
-     data-ch="${r.ch}"
-     data-v="${r.v}">
+    resultsDiv.innerHTML = results.map(r => `
+      <div class="search-result"
+           data-book="${r.book}"
+           data-ch="${r.ch}"
+           data-v="${r.v}">
+        <b>${r.ref}</b> ${r.text.slice(0, 120)}...
+      </div>`
+    ).join('');
+  };
+
+  // ... rest of your listeners stay the same
+  resultsDiv.onclick = e => { /* ... */ };
+  document.addEventListener('click', e => { /* ... */ });
+  document.getElementById('verses').onclick = e => { /* ... */ };
+  document.getElementById('btn-highlight').onclick = () => { /* ... */ };
+  document.getElementById('btn-save-note').onclick = () => { /* ... */ };
+  document.getElementById('btn-close-modal').onclick = closeModal;
+  document.getElementById('verse-modal').onclick = e => { /* ... */ };
+  document.getElementById('menu-btn').onclick = () => { /* ... */ };
+}
+    resultsDiv.style.display = 'block';
+    // FIX 4: Added missing backticks here
+    resultsDiv.innerHTML = results.map(r => `
+      <div class="search-result"
+           data-book="${r.book}"
+           data-ch="${r.ch}"
+           data-v="${r.v}">
         <b>${r.ref}</b> ${r.text.slice(0, 120)}...
       </div>`
     ).join('');
@@ -218,24 +263,15 @@ function setupEventListeners() {
         const verse = document.querySelector(
             `[data-id="${res.dataset.book}-${res.dataset.ch}-${res.dataset.v}"]`
         );
-
         if (verse) {
-            verse.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-
+            verse.scrollIntoView({ behavior: "smooth", block: "center" });
             verse.classList.add("search-hit");
-
-            setTimeout(() => {
-                verse.classList.remove("search-hit");
-            }, 2000);
+            setTimeout(() => { verse.classList.remove("search-hit"); }, 2000);
         }
     });
-
     searchInput.value = "";
     resultsDiv.style.display = "none";
-};
+  };
 
   document.addEventListener('click', e => {
     if (!e.target.closest('.search-wrap')) resultsDiv.style.display = 'none';
@@ -280,8 +316,8 @@ function navChapter(dir) {
   const newIdx = idx + dir;
 
   if (newIdx >= 0 && newIdx < chapters.length) {
-  loadChapter(currentBook, chapters[newIdx]);
- } else {
+    loadChapter(currentBook, chapters[newIdx]);
+  } else {
     const books = Object.keys(KJV);
     const bookIdx = books.indexOf(currentBook);
     const newBookIdx = bookIdx + dir;
