@@ -151,21 +151,34 @@ function closeModal() {
 }
 
 // === 6. COPY WITH REFERENCE ===
-document.addEventListener('copy', e => {
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
+document.addEventListener("copy", e => {
 
-  let el = selection.anchorNode;
-  if (el.nodeType === 3) el = el.parentElement;
-  const verse = el.closest('.verse');
-  if (!verse) return;
+    const selection = window.getSelection();
 
-  const [book, ch, v] = verse.dataset.id.split('-');
-  const text = selection.toString().trim().replace(/\s+/g, ' ');
-  if (text) {
-    e.clipboardData.setData('text/plain', `${text} — ${book} ${ch}:${v} KJV`);
+    if (!selection.rangeCount) return;
+
+    let el = selection.anchorNode;
+
+    if (el.nodeType === 3)
+        el = el.parentElement;
+
+    const verse = el.closest(".verse");
+
+    if (!verse) return;
+
+    const [book, ch, v] = verse.dataset.id.split("-");
+
+    const text = verse.innerText
+        .replace(/^\d+\s*/, "")
+        .trim();
+
+    e.clipboardData.setData(
+        "text/plain",
+        `${book} ${ch}:${v}\n\n${text}\n\n(KJV)`
+    );
+
     e.preventDefault();
-  }
+
 });
 
 // === 7. EVENT LISTENERS ===
@@ -186,7 +199,10 @@ function setupEventListeners() {
     }
     resultsDiv.style.display = 'block';
     resultsDiv.innerHTML = results.map(r =>
-      `<div class="search-result" data-book="${r.book}" data-ch="${r.ch}">
+    <div class="search-result"
+     data-book="${r.book}"
+     data-ch="${r.ch}"
+     data-v="${r.v}">
         <b>${r.ref}</b> ${r.text.slice(0, 120)}...
       </div>`
     ).join('');
@@ -194,12 +210,32 @@ function setupEventListeners() {
 
   resultsDiv.onclick = e => {
     const res = e.target.closest('.search-result');
-    if (res) {
-      loadChapter(res.dataset.book, res.dataset.ch);
-      searchInput.value = '';
-      resultsDiv.style.display = 'none';
-    }
-  };
+    if (!res) return;
+
+    loadChapter(res.dataset.book, res.dataset.ch);
+
+    requestAnimationFrame(() => {
+        const verse = document.querySelector(
+            `[data-id="${res.dataset.book}-${res.dataset.ch}-${res.dataset.v}"]`
+        );
+
+        if (verse) {
+            verse.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            verse.classList.add("search-hit");
+
+            setTimeout(() => {
+                verse.classList.remove("search-hit");
+            }, 2000);
+        }
+    });
+
+    searchInput.value = "";
+    resultsDiv.style.display = "none";
+};
 
   document.addEventListener('click', e => {
     if (!e.target.closest('.search-wrap')) resultsDiv.style.display = 'none';
@@ -244,8 +280,10 @@ function navChapter(dir) {
   const newIdx = idx + dir;
 
   if (newIdx >= 0 && newIdx < chapters.length) {
-    loadChapter(currentBook, chapters[newIdx]);
-  } else {
+    loadChapter(currentBook,document.getElementById("book-select").value = currentBook;
+ chapters[newIdx] document.getElementById("chapter-select").value = currentChapter;);
+    
+ } else {
     const books = Object.keys(KJV);
     const bookIdx = books.indexOf(currentBook);
     const newBookIdx = bookIdx + dir;
