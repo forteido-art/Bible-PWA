@@ -199,14 +199,17 @@ document.addEventListener("copy", e => {
 
 // === 7. EVENT LISTENERS ===
 function setupEventListeners() {
-  document.getElementById('book-select').onchange = e => loadChapter(e.target.value, 1);
-  document.getElementById('chapter-select').onchange = e => loadChapter(currentBook, e.target.value);
-  
-  // NEW: Verse dropdown listener
+  document.getElementById('book-select').onchange = e =>
+    loadChapter(e.target.value, 1);
+
+  document.getElementById('chapter-select').onchange = e =>
+    loadChapter(currentBook, e.target.value);
+
+  // Verse dropdown
   document.getElementById('verse-select').onchange = e => {
     const verse = e.target.value;
-    if(verse) loadChapter(currentBook, currentChapter, verse);
-  }
+    if (verse) loadChapter(currentBook, currentChapter, verse);
+  };
 
   document.getElementById('prev-ch').onclick = () => navChapter(-1);
   document.getElementById('next-ch').onclick = () => navChapter(1);
@@ -214,12 +217,15 @@ function setupEventListeners() {
   const searchInput = document.getElementById('search');
   const resultsDiv = document.getElementById('search-results');
 
+  // Search input
   searchInput.oninput = e => {
     const results = searchVerses(e.target.value);
-    if (!e.target.value ||!results.length) {
+
+    if (!e.target.value || !results.length) {
       resultsDiv.style.display = 'none';
       return;
     }
+
     resultsDiv.style.display = 'block';
     resultsDiv.innerHTML = results.map(r => `
       <div class="search-result"
@@ -227,83 +233,67 @@ function setupEventListeners() {
            data-ch="${r.ch}"
            data-v="${r.v}">
         <b>${r.ref}</b> ${r.text.slice(0, 120)}...
-      </div>`
-    ).join('');
+      </div>
+    `).join('');
   };
 
-  // ... rest of your listeners stay the same
-  resultsDiv.onclick = e => { /* ... */ };
-  document.addEventListener('click', e => { /* ... */ });
-  document.getElementById('verses').onclick = e => { /* ... */ };
-  document.getElementById('btn-highlight').onclick = () => { /* ... */ };
-  document.getElementById('btn-save-note').onclick = () => { /* ... */ };
-  document.getElementById('btn-close-modal').onclick = closeModal;
-  document.getElementById('verse-modal').onclick = e => { /* ... */ };
-  document.getElementById('menu-btn').onclick = () => { /* ... */ };
-}
-    resultsDiv.style.display = 'block';
-    // FIX 4: Added missing backticks here
-    resultsDiv.innerHTML = results.map(r => `
-      <div class="search-result"
-           data-book="${r.book}"
-           data-ch="${r.ch}"
-           data-v="${r.v}">
-        <b>${r.ref}</b> ${r.text.slice(0, 120)}...
-      </div>`
-    ).join('');
-  };
-
+  // Click search result
   resultsDiv.onclick = e => {
     const res = e.target.closest('.search-result');
     if (!res) return;
 
-    loadChapter(res.dataset.book, res.dataset.ch);
+    // ✅ includes verse now
+    loadChapter(res.dataset.book, res.dataset.ch, res.dataset.v);
 
-    requestAnimationFrame(() => {
-        const verse = document.querySelector(
-            `[data-id="${res.dataset.book}-${res.dataset.ch}-${res.dataset.v}"]`
-        );
-        if (verse) {
-            verse.scrollIntoView({ behavior: "smooth", block: "center" });
-            verse.classList.add("search-hit");
-            setTimeout(() => { verse.classList.remove("search-hit"); }, 2000);
-        }
-    });
     searchInput.value = "";
     resultsDiv.style.display = "none";
   };
 
+  // Hide search when clicking outside
   document.addEventListener('click', e => {
-    if (!e.target.closest('.search-wrap')) resultsDiv.style.display = 'none';
+    if (!e.target.closest('.search-wrap')) {
+      resultsDiv.style.display = 'none';
+    }
   });
 
+  // Verse click → open modal
   document.getElementById('verses').onclick = e => {
     const verse = e.target.closest('.verse');
     if (verse) showVerseModal(verse.dataset.id);
   };
 
+  // Highlight button
   document.getElementById('btn-highlight').onclick = () => {
     if (activeVerseId) toggleHighlight(activeVerseId);
     closeModal();
   };
 
+  // Save note
   document.getElementById('btn-save-note').onclick = () => {
-    if (activeVerseId) saveNote(activeVerseId, document.getElementById('note-input').value);
+    if (activeVerseId) {
+      saveNote(activeVerseId, document.getElementById('note-input').value);
+    }
     closeModal();
   };
 
+  // Modal close
   document.getElementById('btn-close-modal').onclick = closeModal;
+
   document.getElementById('verse-modal').onclick = e => {
     if (e.target.id === 'verse-modal') closeModal();
   };
 
+  // Menu
   document.getElementById('menu-btn').onclick = () => {
     const action = prompt('Menu:\n1 = Export Notes\n2 = Import Notes');
+
     if (action === '1') exportData();
+
     if (action === '2') {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
+
       input.onchange = e => importData(e.target.files[0]);
       input.click();
     }
