@@ -390,7 +390,7 @@
             }
         });
 
-        // 2. Local File Parsing & Persistence
+          // 2. Local File Parsing & Persistence (FIXED)
         document.getElementById('bibleDataFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -401,13 +401,16 @@
                 try {
                     const parsed = JSON.parse(event.target.result);
                     
-                    // Parse based on structure format
-                    if (Array.isArray(parsed)) {
-                        bibleData = parsed;
-                    } else if (parsed.verses || parsed.metadata) {
-                        bibleData = convertStrongsToStandard(parsed);
+                    // Smart detection: check if it's already pre-structured or a flat array/object
+                    if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
+                        bibleData = parsed; // Already structured perfectly
                     } else {
-                        throw new Error("Unknown structure format");
+                        // Extract verses array safely from either object wrapper or flat array
+                        let versesArray = Array.isArray(parsed) ? parsed : (parsed.verses || []);
+                        if (versesArray.length === 0) {
+                            throw new Error("No verses found in file");
+                        }
+                        bibleData = convertStrongsToStandard(versesArray);
                     }
 
                     statusMsg.textContent = "Saving to secure offline database...";
@@ -416,29 +419,34 @@
                     initBibleView();
                 } catch (err) {
                     statusMsg.textContent = "";
-                    alert("Error processing file. Please ensure it is the valid kjv.json or kjv_strongs.json file.");
+                    alert("Error processing file. Please ensure it is a valid kjv.json or kjv_strongs.json file.");
                     console.error(err);
                 }
             };
             reader.readAsText(file);
         });
 
-        // Structure Standardizer for structural alignment
-        function convertStrongsToStandard(data) {
-            let versesArray = data.verses || (Array.isArray(data) ? data : []);
+        // Structure Standardizer for structural alignment (OPTIMIZED)
+        function convertStrongsToStandard(versesArray) {
             let structured = [];
             let bookMap = {};
 
             versesArray.forEach(v => {
-                if (!bookMap[v.book_name]) {
-                    bookMap[v.book_name] = { name: v.book_name, chapters: [] };
-                    structured.push(bookMap[v.book_name]);
+                // Support both 'book_name' and 'book' keys commonly found in Bible JSONs
+                let bookName = v.book_name || v.book || "Unknown Book";
+                let chapterNum = parseInt(v.chapter);
+                let textContent = v.text || "";
+
+                if (!bookMap[bookName]) {
+                    bookMap[bookName] = { name: bookName, chapters: [] };
+                    structured.push(bookMap[bookName]);
                 }
-                let chIdx = v.chapter - 1;
-                if (!bookMap[v.book_name].chapters[chIdx]) {
-                    bookMap[v.book_name].chapters[chIdx] = [];
+                
+                let chIdx = chapterNum - 1;
+                if (!bookMap[bookName].chapters[chIdx]) {
+                    bookMap[bookName].chapters[chIdx] = [];
                 }
-                bookMap[v.book_name].chapters[chIdx].push(v.text);
+                bookMap[bookName].chapters[chIdx].push(textContent);
             });
             return structured;
         }
