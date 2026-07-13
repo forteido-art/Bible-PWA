@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline Bible App</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.293.0/lucide.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TKH Bible</title>
+    <script src="lucide.min.js"></script>
     <style>
         :root {
-            --bg-color: #0b132b;
-            --surface-color: #1c2541;
-            --surface-light: #3a506b;
-            --accent-color: #64dfdf;
-            --text-main: #ffffff;
-            --text-muted: #95a5a6;
+            /* Material Design 3 Dark Theme Palette (Material You Tone) */
+            --md-bg: #111318;
+            --md-surface: #1a1c22;
+            --md-surface-variant: #2e3038;
+            --md-primary: #a8c7fa;
+            --md-on-primary: #062e6f;
+            --md-secondary-container: #334466;
+            --md-on-secondary-container: #d2e4ff;
+            --md-text-main: #e2e2e6;
+            --md-text-muted: #c4c6d0;
             --padding-base: 16px;
         }
 
@@ -20,419 +24,286 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--md-bg);
+            color: var(--md-text-main);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* Top Header & Search */
+        /* Android Top Action Bar */
         header {
-            background-color: var(--surface-color);
-            padding: 12px var(--padding-base);
+            background-color: var(--md-surface);
+            height: 64px;
+            padding: 0 var(--padding-base);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             z-index: 10;
-            height: 60px;
         }
 
-        .header-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            transition: opacity 0.3s ease;
+        .app-title {
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 0px;
+            color: var(--md-text-main);
         }
 
-        .search-container {
+        /* Material Component Dropdowns */
+        .nav-selectors {
             display: flex;
-            align-items: center;
-            position: relative;
+            gap: 8px;
         }
 
-        .search-box {
-            width: 0;
-            opacity: 0;
-            pointer-events: none;
-            background: var(--surface-light);
+        .md-select {
+            background-color: var(--md-surface-variant);
+            color: var(--md-text-main);
             border: none;
             outline: none;
-            padding: 8px 0px;
-            border-radius: 20px;
-            color: white;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.95rem;
+            padding: 8px 16px;
+            border-radius: 20px; /* Fully rounded pill shape */
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            appearance: none;
+            text-align: center;
+            min-width: 90px;
         }
 
-        .search-container.expanded .search-box {
-            width: 220px;
-            opacity: 1;
-            pointer-events: auto;
-            padding: 8px 40px 8px 15px;
-        }
-
-        .search-btn {
-            background: none;
-            border: none;
-            color: var(--accent-color);
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s;
-        }
-
-        .search-container.expanded .search-btn {
-            position: absolute;
-            right: 5px;
-            color: white;
-        }
-
-        /* Main Content View Container */
+        /* Main Scrollable Content Area */
         main {
             flex: 1;
             overflow-y: auto;
             padding: var(--padding-base);
-            padding-bottom: 100px; /* Space for bottom navigation */
-            scroll-behavior: smooth;
+            padding-bottom: 80px; /* Space for Bottom Nav Bar */
         }
 
-        /* Setup / Upload Screen */
-        .upload-section {
-            background: var(--surface-color);
-            padding: 20px;
-            border-radius: 12px;
+        /* Material Empty/Upload Screen State */
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             text-align: center;
-            margin-top: 20px;
-            border: 2px dashed var(--surface-light);
+            padding: 24px;
         }
 
-        .upload-btn {
-            display: inline-block;
-            background: var(--accent-color);
-            color: var(--bg-color);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-top: 15px;
+        .md-btn-fab {
+            background-color: var(--md-primary);
+            color: var(--md-on-primary);
+            border: none;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 16px;
         }
 
-        .status-msg {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: var(--accent-color);
+        .file-hidden {
+            display: none;
         }
 
-        /* Bible Text Layout */
-        .verse-container {
-            margin-bottom: 18px;
-            padding: 8px;
-            border-radius: 6px;
-            transition: background 0.3s;
-        }
-
-        .verse-container.highlight {
-            background: rgba(100, 223, 223, 0.2);
-            border-left: 4px solid var(--accent-color);
+        /* Bible Text Grid styling */
+        .verse-layout {
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-size: 18px;
+            letter-spacing: 0.2px;
         }
 
         .verse-num {
-            color: var(--accent-color);
+            color: var(--md-primary);
             font-weight: bold;
-            font-size: 0.85rem;
-            margin-right: 6px;
+            font-size: 14px;
+            margin-right: 8px;
             vertical-align: super;
         }
 
-        .verse-text {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            cursor: pointer;
-        }
-
-        /* Strongs numbers formatting if using kjv_strongs.json */
-        .strongs-num {
-            font-size: 0.75rem;
-            color: #ffaa00;
-            opacity: 0.85;
-            margin-left: 2px;
-            user-select: none;
-        }
-
-        /* Notes functionality */
-        .note-indicator {
-            display: inline-flex;
-            align-items: center;
-            margin-left: 8px;
-            color: #a29bfe;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .note-area {
-            width: 100%;
-            background: #111a36;
-            border: 1px solid var(--surface-light);
-            color: white;
-            padding: 8px;
-            border-radius: 6px;
-            margin-top: 8px;
-            display: none;
-            resize: vertical;
-        }
-
-        /* Bottom Navigation Toolbar */
+        /* Standard Android Bottom Navigation Bar */
         .bottom-nav {
+            background-color: var(--md-surface);
+            height: 80px;
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background-color: var(--surface-color);
-            padding: 12px;
             display: flex;
-            gap: 8px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--md-surface-variant);
             z-index: 10;
         }
 
-        .dropdown-wrapper {
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--md-text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
             flex: 1;
-            position: relative;
-        }
-
-        select {
-            width: 100%;
-            background-color: var(--surface-light);
-            color: var(--text-main);
+            height: 100%;
+            background: none;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            appearance: none;
-            outline: none;
-            cursor: pointer;
-            text-align: center;
+            gap: 4px;
         }
 
-        /* Search Results View */
-        .search-results-title {
-            color: var(--accent-color);
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+        .nav-item.active {
+            color: var(--md-on-secondary-container);
         }
 
-        .search-item {
-            background: var(--surface-color);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
+        .nav-icon-wrapper {
+            padding: 4px 20px;
+            border-radius: 16px;
         }
 
-        .search-item:active {
-            transform: scale(0.98);
+        .nav-item.active .nav-icon-wrapper {
+            background-color: var(--md-secondary-container);
         }
 
-        .search-item-header {
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 4px;
-            font-size: 0.9rem;
+        .status-text {
+            font-size: 14px;
+            color: var(--md-text-muted);
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-title" id="appTitle">Holy Bible</div>
-        <div class="search-container" id="searchContainer">
-            <input type="text" class="search-box" id="searchInput" placeholder="Search verses...">
-            <button class="search-btn" id="searchToggleBtn">
-                <i data-lucide="search"></i>
-            </button>
+        <div class="app-title" id="appTitle">Holy Bible</div>
+        <div class="nav-selectors">
+            <select id="bookSelect" class="md-select"><option>Book</option></select>
+            <select id="chapterSelect" class="md-select"><option>Ch</option></select>
         </div>
     </header>
 
     <main id="mainViewer">
-        <div id="initialSetup" class="upload-section">
-            <h3>Welcome to your Offline Bible</h3>
-            <p style="color: var(--text-muted); margin-top: 8px; font-size:0.9rem;">
-                Select either <b>kjv.json</b> or <b>kjv_strongs.json</b> from your device. It will save locally to the browser's database for instant offline access.
-            </p>
-            <label class="upload-btn">
-                Select Bible JSON File
-                <input type="file" id="bibleDataFile" accept=".json" style="display: none;">
-            </label>
-            <div id="statusMsg" class="status-msg"></div>
+        <div id="bibleContent">
+            <div class="upload-container" id="initialUploadState">
+                <i data-lucide="book-open" style="width: 48px; height: 48px; color: var(--md-primary);"></i>
+                <h3 style="margin-top: 16px;">No Bible Data Loaded</h3>
+                <p class="status-text" id="statusMsg">Please select your KJV JSON file to initialize offline storage.</p>
+                
+                <label class="md-btn-fab">
+                    <i data-lucide="upload"></i> Load Bible File
+                    <input type="file" id="bibleDataFile" class="file-hidden" accept=".json">
+                </label>
+            </div>
         </div>
-        <div id="bibleContent"></div>
     </main>
 
-    <div class="bottom-nav">
-        <div class="dropdown-wrapper">
-            <select id="bookSelect"><option>Book</option></select>
-        </div>
-        <div class="dropdown-wrapper">
-            <select id="chapterSelect"><option>Ch</option></select>
-        </div>
-        <div class="dropdown-wrapper">
-            <select id="verseSelect"><option>Vs</option></select>
-        </div>
-    </div>
+    <nav class="bottom-nav">
+        <button class="nav-item active" id="navRead">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="book-open"></i>
+            </div>
+            <span>Read</span>
+        </button>
+        <button class="nav-item" id="navSearch">
+            <div class="nav-icon-wrapper">
+                <i data-lucide="search"></i>
+            </div>
+            <span>Search</span>
+        </button>
+    </nav>
 
     <script>
-        // State variables
         let bibleData = null;
-        let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
 
-        // DOM elements
-        const searchContainer = document.getElementById('searchContainer');
-        const searchToggleBtn = document.getElementById('searchToggleBtn');
-        const searchInput = document.getElementById('searchInput');
-        const appTitle = document.getElementById('appTitle');
-        const mainViewer = document.getElementById('mainViewer');
-        const bibleContent = document.getElementById('bibleContent');
-        const initialSetup = document.getElementById('initialSetup');
-        const statusMsg = document.getElementById('statusMsg');
-        
+        // Core DOM elements
         const bookSelect = document.getElementById('bookSelect');
         const chapterSelect = document.getElementById('chapterSelect');
-        const verseSelect = document.getElementById('verseSelect');
+        const bibleContent = document.getElementById('bibleContent');
+        const mainViewer = document.getElementById('mainViewer');
+        const statusMsg = document.getElementById('statusMsg');
+        const uploadState = document.getElementById('initialUploadState');
 
-        // Initialize App Icons
+        // Initialize Icons
         lucide.createIcons();
 
-        // --- IndexedDB Configuration for Unlimited Offline Storage ---
-        const DB_NAME = 'OfflineBibleDB';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'bible_data';
-
+        // --- IndexedDB Local Native Caching Engine ---
         function openDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onupgradeneeded = (e) => {
-                    const db = e.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        db.createObjectStore(STORE_NAME);
-                    }
+                const request = indexedDB.open("AndroidBibleDB", 1);
+                request.onupgradeneeded = e => {
+                    e.target.result.createObjectStore("bible_store");
                 };
-                request.onsuccess = (e) => resolve(e.target.result);
-                request.onerror = (e) => reject(e.target.error);
+                request.onsuccess = e => resolve(e.target.result);
+                request.onerror = e => reject(e.target.error);
             });
         }
 
         async function saveToDB(data) {
             const db = await openDB();
             return new Promise((resolve, reject) => {
-                const transaction = db.transaction(STORE_NAME, 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.put(data, 'kjv_data');
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
+                const tx = db.transaction("bible_store", "readwrite");
+                tx.objectStore("bible_store").put(data, "kjv_data");
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
             });
         }
 
         async function loadFromDB() {
             const db = await openDB();
             return new Promise((resolve, reject) => {
-                const transaction = db.transaction(STORE_NAME, 'readonly');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.get('kjv_data');
+                const tx = db.transaction("bible_store", "readonly");
+                const request = tx.objectStore("bible_store").get("kjv_data");
                 request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
+                request.onerror = () => reject(tx.error);
             });
         }
 
-        // 1. Expandable Search Box Interaction
-        searchToggleBtn.addEventListener('click', () => {
-            if (!bibleData) return;
-            
-            if (!searchContainer.classList.contains('expanded')) {
-                searchContainer.classList.add('expanded');
-                appTitle.style.opacity = '0';
-                searchInput.focus();
-                searchToggleBtn.innerHTML = '<i data-lucide="x"></i>';
-            } else {
-                if (searchInput.value.trim() !== "") {
-                    executeSearch(searchInput.value.trim());
-                } else {
-                    closeSearch();
-                }
-            }
-            lucide.createIcons();
-        });
-
-        function closeSearch() {
-            searchContainer.classList.remove('expanded');
-            appTitle.style.opacity = '1';
-            searchInput.value = '';
-            searchToggleBtn.innerHTML = '<i data-lucide="search"></i>';
-            lucide.createIcons();
-            renderCurrentChapter();
-        }
-
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                executeSearch(searchInput.value.trim());
-            }
-        });
-
-          // 2. Local File Parsing & Persistence (FIXED)
+        // --- Local File Parsing and Alignment Engine ---
         document.getElementById('bibleDataFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            statusMsg.textContent = "Processing file... Please wait.";
+            statusMsg.textContent = "Processing layout database...";
             const reader = new FileReader();
             reader.onload = async function(event) {
                 try {
                     const parsed = JSON.parse(event.target.result);
                     
-                    // Smart detection: check if it's already pre-structured or a flat array/object
                     if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
-                        bibleData = parsed; // Already structured perfectly
+                        bibleData = parsed; 
                     } else {
-                        // Extract verses array safely from either object wrapper or flat array
                         let versesArray = Array.isArray(parsed) ? parsed : (parsed.verses || []);
-                        if (versesArray.length === 0) {
-                            throw new Error("No verses found in file");
-                        }
-                        bibleData = convertStrongsToStandard(versesArray);
+                        if (versesArray.length === 0) throw new Error("Invalid Format");
+                        bibleData = convertToStandardLayout(versesArray);
                     }
 
-                    statusMsg.textContent = "Saving to secure offline database...";
+                    statusMsg.textContent = "Saving locally to your Android device...";
                     await saveToDB(bibleData);
-                    statusMsg.textContent = "";
                     initBibleView();
                 } catch (err) {
-                    statusMsg.textContent = "";
-                    alert("Error processing file. Please ensure it is a valid kjv.json or kjv_strongs.json file.");
+                    statusMsg.textContent = "Error loading database. Make sure it's valid KJV JSON.";
                     console.error(err);
                 }
             };
             reader.readAsText(file);
         });
 
-        // Structure Standardizer for structural alignment (OPTIMIZED)
-        function convertStrongsToStandard(versesArray) {
+        function convertToStandardLayout(versesArray) {
             let structured = [];
             let bookMap = {};
 
             versesArray.forEach(v => {
-                // Support both 'book_name' and 'book' keys commonly found in Bible JSONs
                 let bookName = v.book_name || v.book || "Unknown Book";
                 let chapterNum = parseInt(v.chapter);
                 let textContent = v.text || "";
@@ -451,186 +322,63 @@
             return structured;
         }
 
-        // 3. UI Navigation Logic
+        // --- Android Presentation Layer ---
         function initBibleView() {
-            initialSetup.style.display = 'none';
-            populateBooks();
+            if (!bibleData || bibleData.length === 0) return;
             
-            bookSelect.selectedIndex = 0;
-            updateChapters();
-        }
-
-        function populateBooks() {
-            bookSelect.innerHTML = '';
+            // Clear out upload container completely 
+            bibleContent.innerHTML = "";
+            
+            // Populate Dropdowns
+            bookSelect.innerHTML = "";
             bibleData.forEach((book, idx) => {
                 let opt = document.createElement('option');
                 opt.value = idx;
                 opt.textContent = book.name;
                 bookSelect.appendChild(opt);
             });
+
+            bookSelect.onchange = () => updateChapterDropdown();
+            chapterSelect.onchange = () => renderChapterVerses();
+
+            updateChapterDropdown();
         }
 
-        function updateChapters() {
+        function updateChapterDropdown() {
             const bookIdx = bookSelect.value;
-            if (!bibleData[bookIdx]) return;
-            const chapters = bibleData[bookIdx].chapters;
+            const book = bibleData[bookIdx];
+            chapterSelect.innerHTML = "";
             
-            chapterSelect.innerHTML = '';
-            chapters.forEach((_, idx) => {
+            book.chapters.forEach((_, idx) => {
                 let opt = document.createElement('option');
                 opt.value = idx;
                 opt.textContent = `Ch ${idx + 1}`;
                 chapterSelect.appendChild(opt);
             });
-            updateVerses();
+
+            renderChapterVerses();
         }
 
-        function updateVerses() {
+        function renderChapterVerses() {
             const bookIdx = bookSelect.value;
             const chIdx = chapterSelect.value;
-            if (!bibleData[bookIdx] || !bibleData[bookIdx].chapters[chIdx]) return;
-            const verses = bibleData[bookIdx].chapters[chIdx] || [];
-            
-            verseSelect.innerHTML = '';
-            verses.forEach((_, idx) => {
-                let opt = document.createElement('option');
-                opt.value = idx;
-                opt.textContent = `Vs ${idx + 1}`;
-                verseSelect.appendChild(opt);
-            });
-            renderCurrentChapter();
-        }
+            const verses = bibleData[bookIdx].chapters[chIdx];
 
-        bookSelect.addEventListener('change', updateChapters);
-        chapterSelect.addEventListener('change', updateVerses);
-        verseSelect.addEventListener('change', () => {
-            const verseIdx = verseSelect.value;
-            scrollToVerse(verseIdx);
-        });
+            bibleContent.innerHTML = "";
+            mainViewer.scrollTop = 0; // Scroll back up cleanly
 
-        // 4. Content Rendering
-        function renderCurrentChapter() {
-            if (!bibleData) return;
-            const bookIdx = bookSelect.value;
-            const chIdx = chapterSelect.value;
-            const bookName = bibleData[bookIdx].name;
-            const verses = bibleData[bookIdx].chapters[chIdx] || [];
-
-            appTitle.textContent = `${bookName} ${parseInt(chIdx) + 1}`;
-
-            let html = '';
-            verses.forEach((text, idx) => {
-                const verseNum = idx + 1;
-                const noteKey = `${bookName}_${chIdx}_${verseNum}`;
-                const hasNote = notes[noteKey] ? 'inline-flex' : 'none';
-                const savedNoteText = notes[noteKey] || '';
+            verses.forEach((verseText, idx) => {
+                // Remove raw Strong's codes strings gracefully if viewing a strongs file
+                let cleanText = verseText.replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "");
                 
-                // Formats Strong's Greek/Hebrew tags cleanly if using kjv_strongs.json
-                let processedText = text.replace(/\{[GH]\d+\}/g, (match) => {
-                    return `<span class="strongs-num">${match.replace(/[{}]/g, '')}</span>`;
-                });
-
-                html += `
-                    <div class="verse-container" id="v_${idx}">
-                        <span class="verse-num">${verseNum}</span>
-                        <span class="verse-text" onclick="toggleNoteArea('${noteKey}')">${processedText}</span>
-                        <span class="note-indicator" id="ind_${noteKey}" style="display: ${hasNote}" onclick="toggleNoteArea('${noteKey}')">
-                            <i data-lucide="sticky-note" style="width:14px; height:14px; margin-right:2px;"></i> note
-                        </span>
-                        <textarea class="note-area" id="note_${noteKey}" placeholder="Write a note for this verse..." oninput="saveNote('${noteKey}', this.value)">${savedNoteText}</textarea>
-                    </div>
-                `;
+                let p = document.createElement('div');
+                p.className = 'verse-layout';
+                p.innerHTML = `<span class="verse-num">${idx + 1}</span>${cleanText}`;
+                bibleContent.appendChild(p);
             });
-
-            bibleContent.innerHTML = html;
-            lucide.createIcons();
-            mainViewer.scrollTop = 0;
         }
 
-        function scrollToVerse(verseIdx) {
-            const target = document.getElementById(`v_${verseIdx}`);
-            if (target) {
-                document.querySelectorAll('.verse-container').forEach(el => el.classList.remove('highlight'));
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                target.classList.add('highlight');
-            }
-        }
-
-        // 5. Notes Engine
-        window.toggleNoteArea = function(noteKey) {
-            const el = document.getElementById(`note_${noteKey}`);
-            if (el.style.display === 'block') {
-                el.style.display = 'none';
-            } else {
-                el.style.display = 'block';
-                el.focus();
-            }
-        };
-
-        window.saveNote = function(noteKey, value) {
-            if (value.trim() === "") {
-                delete notes[noteKey];
-                document.getElementById(`ind_${noteKey}`).style.display = 'none';
-            } else {
-                notes[noteKey] = value;
-                document.getElementById(`ind_${noteKey}`).style.display = 'inline-flex';
-            }
-            localStorage.setItem('bible_notes', JSON.stringify(notes));
-        };
-
-        // 6. Global Search Implementation
-        function executeSearch(query) {
-            if (!query) return;
-            query = query.toLowerCase();
-            
-            bibleContent.innerHTML = `<h3 class="search-results-title">Search Results for "${query}":</h3>`;
-            let resultsCount = 0;
-
-            bibleData.forEach((book, bIdx) => {
-                book.chapters.forEach((chapter, cIdx) => {
-                    chapter.forEach((verseText, vIdx) => {
-                        if (verseText.toLowerCase().includes(query)) {
-                            resultsCount++;
-                            let item = document.createElement('div');
-                            item.className = 'search-item';
-                            
-                            let cleanText = verseText.replace(/\{[GH]\d+\}/g, '');
-                            
-                            item.innerHTML = `
-                                <div class="search-item-header">${book.name} ${cIdx + 1}:${vIdx + 1}</div>
-                                <div style="font-size:0.95rem; line-height:1.4;">${cleanText}</div>
-                            `;
-                            
-                            item.addEventListener('click', () => {
-                                bookSelect.value = bIdx;
-                                updateChapters();
-                                chapterSelect.value = cIdx;
-                                updateVerses();
-                                
-                                searchContainer.classList.remove('expanded');
-                                appTitle.style.opacity = '1';
-                                searchInput.value = '';
-                                searchToggleBtn.innerHTML = '<i data-lucide="search"></i>';
-                                lucide.createIcons();
-
-                                setTimeout(() => {
-                                    scrollToVerse(vIdx);
-                                }, 300);
-                            });
-                            
-                            bibleContent.appendChild(item);
-                        }
-                    });
-                });
-            });
-
-            if (resultsCount === 0) {
-                bibleContent.innerHTML += `<p style="color: var(--text-muted);">No matches found.</p>`;
-            }
-            mainViewer.scrollTop = 0;
-        }
-
-        // On load, check the high-capacity IndexedDB database
+        // Check if database is cached natively on load
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const cached = await loadFromDB();
@@ -639,7 +387,7 @@
                     initBibleView();
                 }
             } catch (err) {
-                console.error("Error checking offline cache store:", err);
+                console.error("Device local system storage exception:", err);
             }
         });
     </script>

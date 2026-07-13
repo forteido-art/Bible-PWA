@@ -1,4 +1,4 @@
-const CACHE = 'bible-v4.6';
+const CACHE = 'bible-v6';
 const ASSETS = [
   '/', 'index.html', 'style.css', 'app.js', 
   'bible.js', 'manifest.json', 'icon-192.png', 'icon-512.png'
