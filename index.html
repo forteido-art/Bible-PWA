@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TKH Bible</title>
+    <title>Holy Bible</title>
     <script src="lucide.min.js"></script>
+    <script>if(typeof lucide === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@0.293.0/dist/umd/lucide.min.js"><\/script>'); }</script>
+    
     <style>
         :root {
-            /* Material Design 3 Dark Theme Palette (Material You Tone) */
             --md-bg: #111318;
             --md-surface: #1a1c22;
             --md-surface-variant: #2e3038;
@@ -24,8 +25,10 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Roboto', system-ui, sans-serif;
             -webkit-tap-highlight-color: transparent;
+            user-select: none; /* Prevent system text selection highlights on long-press */
+            -webkit-user-select: none;
         }
 
         body {
@@ -37,7 +40,7 @@
             overflow: hidden;
         }
 
-        /* Android Top Action Bar */
+        /* Top Action Bar */
         header {
             background-color: var(--md-surface);
             height: 64px;
@@ -50,13 +53,11 @@
         }
 
         .app-title {
-            font-size: 22px;
-            font-weight: 400;
-            letter-spacing: 0px;
+            font-size: 20px;
+            font-weight: 500;
             color: var(--md-text-main);
         }
 
-        /* Material Component Dropdowns */
         .nav-selectors {
             display: flex;
             gap: 8px;
@@ -67,31 +68,38 @@
             color: var(--md-text-main);
             border: none;
             outline: none;
-            padding: 8px 16px;
-            border-radius: 20px; /* Fully rounded pill shape */
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 14px;
             font-weight: 500;
-            font-family: inherit;
             appearance: none;
             text-align: center;
-            min-width: 90px;
         }
 
-        /* Main Scrollable Content Area */
+        /* Content Containers */
         main {
             flex: 1;
             overflow-y: auto;
             padding: var(--padding-base);
-            padding-bottom: 80px; /* Space for Bottom Nav Bar */
+            padding-bottom: 90px;
         }
 
-        /* Material Empty/Upload Screen State */
+        .view-panel {
+            display: none;
+            height: 100%;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        /* Upload Layout Setup */
         .upload-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            height: 80vh;
             text-align: center;
             padding: 24px;
         }
@@ -100,294 +108,680 @@
             background-color: var(--md-primary);
             color: var(--md-on-primary);
             border: none;
-            padding: 16px 24px;
+            padding: 14px 24px;
             border-radius: 16px;
             font-size: 14px;
             font-weight: 500;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            cursor: pointer;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             margin-top: 16px;
+            cursor: pointer;
         }
 
-        .file-hidden {
-            display: none;
-        }
+        .file-hidden { display: none; }
 
-        /* Bible Text Grid styling */
+        /* Reader Verses formatting */
         .verse-layout {
-            margin-bottom: 16px;
-            line-height: 1.6;
+            padding: 8px 12px;
+            line-height: 1.7;
             font-size: 18px;
-            letter-spacing: 0.2px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        .verse-layout:active {
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
         .verse-num {
             color: var(--md-primary);
-            font-weight: bold;
-            font-size: 14px;
-            margin-right: 8px;
-            vertical-align: super;
+            font-weight: 700;
+            font-size: 13px;
+            margin-right: 10px;
+            display: inline-block;
+            width: 20px;
         }
 
-        /* Standard Android Bottom Navigation Bar */
+        /* Highlights Styles */
+        .hl-yellow { background-color: rgba(241, 196, 15, 0.35) !important; color: #fff; }
+        .hl-green  { background-color: rgba(46, 204, 113, 0.35) !important; color: #fff; }
+        .hl-blue   { background-color: rgba(52, 152, 219, 0.35) !important; color: #fff; }
+        .hl-pink   { background-color: rgba(231, 76, 60, 0.35) !important; color: #fff; }
+        
+        /* Highlight style for noted verses */
+        .hl-note {
+            background-color: rgba(168, 199, 250, 0.15) !important;
+            border-left: 4px solid var(--md-primary);
+        }
+
+        /* Modern Android Options Context Menu[cite: 1] */
+        .context-menu {
+            position: fixed;
+            bottom: 80px; left: 16px; right: 16px;
+            background-color: var(--md-surface);
+            border-radius: 16px;
+            padding: 8px 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+            transform: translateY(150%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 20;
+        }
+        .context-menu.show { transform: translateY(0); }
+
+        .context-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+            color: var(--md-text-main);
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.15s;
+        }
+        .context-option:active {
+            background-color: var(--md-surface-variant);
+        }
+
+        /* Notepad Drawer Modal overlay */
+        .notepad-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 30;
+        }
+        .notepad-modal.show {
+            display: flex;
+        }
+        .notepad-content {
+            background-color: var(--md-surface);
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            height: 60vh;
+        }
+        .notepad-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        #notepadTitle {
+            font-weight: 500;
+            font-size: 18px;
+            color: var(--md-primary);
+        }
+        .notepad-close-btn {
+            background: none;
+            border: none;
+            color: var(--md-text-main);
+            cursor: pointer;
+        }
+        #notepadTextarea {
+            flex: 1;
+            background-color: var(--md-surface-variant);
+            color: var(--md-text-main);
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* Search Input View Elements */
+        .search-box {
+            background-color: var(--md-surface-variant);
+            border-radius: 28px;
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            background: none; border: none; outline: none;
+            color: var(--md-text-main); font-size: 16px; flex: 1;
+        }
+
+        .search-result-item {
+            background-color: var(--md-surface);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .search-result-title {
+            font-size: 13px; color: var(--md-primary); font-weight: bold; margin-bottom: 4px;
+        }
+
+        /* Settings view items */
+        .settings-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; background-color: var(--md-surface);
+            border-radius: 12px; margin-top: 12px;
+        }
+        .btn-danger {
+            background-color: #e74c3c; color: white; border: none;
+            padding: 8px 16px; border-radius: 20px; font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Bottom Nav Tab Bar */
         .bottom-nav {
             background-color: var(--md-surface);
-            height: 80px;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid var(--md-surface-variant);
-            z-index: 10;
+            height: 80px; position: fixed; bottom: 0; left: 0; right: 0;
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--md-surface-variant); z-index: 10;
         }
 
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--md-text-muted);
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
-            flex: 1;
-            height: 100%;
-            background: none;
-            border: none;
-            gap: 4px;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--md-text-muted); background: none; border: none;
+            font-size: 12px; font-weight: 500; flex: 1; gap: 4px;
+            cursor: pointer;
         }
 
-        .nav-item.active {
-            color: var(--md-on-secondary-container);
-        }
-
-        .nav-icon-wrapper {
-            padding: 4px 20px;
-            border-radius: 16px;
-        }
-
-        .nav-item.active .nav-icon-wrapper {
-            background-color: var(--md-secondary-container);
-        }
-
-        .status-text {
-            font-size: 14px;
-            color: var(--md-text-muted);
-            margin-top: 8px;
-        }
+        .nav-item.active { color: var(--md-on-secondary-container); }
+        .nav-icon-wrapper { padding: 4px 20px; border-radius: 16px; }
+        .nav-item.active .nav-icon-wrapper { background-color: var(--md-secondary-container); }
     </style>
 </head>
 <body>
 
     <header>
         <div class="app-title" id="appTitle">Holy Bible</div>
-        <div class="nav-selectors">
+        <div class="nav-selectors" id="headerDropdowns" style="display: none;">
             <select id="bookSelect" class="md-select"><option>Book</option></select>
             <select id="chapterSelect" class="md-select"><option>Ch</option></select>
         </div>
     </header>
 
-    <main id="mainViewer">
-        <div id="bibleContent">
-            <div class="upload-container" id="initialUploadState">
-                <i data-lucide="book-open" style="width: 48px; height: 48px; color: var(--md-primary);"></i>
-                <h3 style="margin-top: 16px;">No Bible Data Loaded</h3>
-                <p class="status-text" id="statusMsg">Please select your KJV JSON file to initialize offline storage.</p>
-                
+    <main id="mainContentPanel">
+        
+        <div id="uploadPanel" class="view-panel active">
+            <div class="upload-container">
+                <i data-lucide="book-open" style="width: 52px; height: 52px; color: var(--md-primary);"></i>
+                <h3 style="margin-top: 16px;">No Active Local Data</h3>
+                <p style="color: var(--md-text-muted); margin-top: 8px; font-size: 14px;">Select any structural JSON Bible translation to initialize application storage layout.</p>
                 <label class="md-btn-fab">
-                    <i data-lucide="upload"></i> Load Bible File
+                    <i data-lucide="upload"></i> Choose JSON File
                     <input type="file" id="bibleDataFile" class="file-hidden" accept=".json">
                 </label>
             </div>
         </div>
+
+        <div id="readerPanel" class="view-panel">
+            <div id="bibleContent"></div>
+        </div>
+
+        <div id="searchPanel" class="view-panel">
+            <div class="search-box">
+                <i data-lucide="search" style="color: var(--md-text-muted);"></i>
+                <input type="text" id="searchInput" placeholder="Search keywords or phrases...">
+            </div>
+            <div id="searchResults"></div>
+        </div>
+
+        <div id="settingsPanel" class="view-panel">
+            <h3 style="margin-bottom: 8px; font-weight: 400;">Translation Parameters</h3>
+            <div class="settings-row">
+                <div>
+                    <p style="font-weight: 500;">Active Module Database</p>
+                    <p style="font-size: 12px; color: var(--md-text-muted);">Purge local files to load another schema file.</p>
+                </div>
+                <button class="btn-danger" id="btnClearData">Clear Database</button>
+            </div>
+        </div>
     </main>
 
-    <nav class="bottom-nav">
-        <button class="nav-item active" id="navRead">
-            <div class="nav-icon-wrapper">
-                <i data-lucide="book-open"></i>
+    <!-- Context Options Menu for long press interactions[cite: 1] -->
+    <div class="context-menu" id="optionsMenu">
+        <button class="context-option" data-action="add-note">
+            <i data-lucide="sticky-note" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Add note</span>
+        </button>
+        <button class="context-option" data-action="highlight-text">
+            <i data-lucide="highlighter" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Highlight text</span>
+        </button>
+        <button class="context-option" data-action="edit-note">
+            <i data-lucide="edit" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Edit note</span>
+        </button>
+        <button class="context-option" data-action="search-dictionary">
+            <i data-lucide="book" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Search dictionary</span>
+        </button>
+    </div>
+
+    <!-- Notepad Drawer Modal -->
+    <div id="notepadModal" class="notepad-modal">
+        <div class="notepad-content">
+            <div class="notepad-header">
+                <span id="notepadTitle">Note</span>
+                <button id="closeNotepadBtn" class="notepad-close-btn">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
             </div>
+            <textarea id="notepadTextarea" placeholder="Type your note here... (autosaves)"></textarea>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" id="tabRead">
+            <div class="nav-icon-wrapper"><i data-lucide="book-open"></i></div>
             <span>Read</span>
         </button>
-        <button class="nav-item" id="navSearch">
-            <div class="nav-icon-wrapper">
-                <i data-lucide="search"></i>
-            </div>
+        <button class="nav-item" id="tabSearch">
+            <div class="nav-icon-wrapper"><i data-lucide="search"></i></div>
             <span>Search</span>
+        </button>
+        <button class="nav-item" id="tabSettings">
+            <div class="nav-icon-wrapper"><i data-lucide="settings"></i></div>
+            <span>Settings</span>
         </button>
     </nav>
 
     <script>
         let bibleData = null;
+        let selectedVerseKey = null; 
+        let highlights = JSON.parse(localStorage.getItem('bible_highlights') || '{}');
+        let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
 
-        // Core DOM elements
+        // DOM nodes references 
         const bookSelect = document.getElementById('bookSelect');
         const chapterSelect = document.getElementById('chapterSelect');
+        const headerDropdowns = document.getElementById('headerDropdowns');
         const bibleContent = document.getElementById('bibleContent');
-        const mainViewer = document.getElementById('mainViewer');
-        const statusMsg = document.getElementById('statusMsg');
-        const uploadState = document.getElementById('initialUploadState');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const optionsMenu = document.getElementById('optionsMenu');
+        const appTitle = document.getElementById('appTitle');
 
-        // Initialize Icons
+        const notepadModal = document.getElementById('notepadModal');
+        const notepadTextarea = document.getElementById('notepadTextarea');
+        const notepadTitle = document.getElementById('notepadTitle');
+        const closeNotepadBtn = document.getElementById('closeNotepadBtn');
+        let activeNoteKey = null;
+
+        // Initial setup execution loops
         lucide.createIcons();
 
-        // --- IndexedDB Local Native Caching Engine ---
+        // Native System Caching Pipeline 
         function openDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open("AndroidBibleDB", 1);
-                request.onupgradeneeded = e => {
-                    e.target.result.createObjectStore("bible_store");
-                };
-                request.onsuccess = e => resolve(e.target.result);
-                request.onerror = e => reject(e.target.error);
+                const req = indexedDB.open("AndroidBibleEngine", 2);
+                req.onupgradeneeded = e => e.target.result.createObjectStore("modules");
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror = e => reject(e.target.error);
             });
         }
-
         async function saveToDB(data) {
             const db = await openDB();
             return new Promise((resolve, reject) => {
-                const tx = db.transaction("bible_store", "readwrite");
-                tx.objectStore("bible_store").put(data, "kjv_data");
+                const tx = db.transaction("modules", "readwrite");
+                tx.objectStore("modules").put(data, "current_active_meta");
                 tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
             });
         }
-
         async function loadFromDB() {
             const db = await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction("bible_store", "readonly");
-                const request = tx.objectStore("bible_store").get("kjv_data");
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(tx.error);
+            return new Promise((resolve) => {
+                const tx = db.transaction("modules", "readonly");
+                const req = tx.objectStore("modules").get("current_active_meta");
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve(null);
             });
         }
 
-        // --- Local File Parsing and Alignment Engine ---
+        // Setup File Loading Interceptor Pipeline 
         document.getElementById('bibleDataFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
-            statusMsg.textContent = "Processing layout database...";
             const reader = new FileReader();
             reader.onload = async function(event) {
                 try {
                     const parsed = JSON.parse(event.target.result);
-                    
                     if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
-                        bibleData = parsed; 
+                        bibleData = parsed;
                     } else {
-                        let versesArray = Array.isArray(parsed) ? parsed : (parsed.verses || []);
-                        if (versesArray.length === 0) throw new Error("Invalid Format");
-                        bibleData = convertToStandardLayout(versesArray);
+                        let flatVerses = Array.isArray(parsed) ? parsed : (parsed.verses || []);
+                        if(flatVerses.length === 0) throw new Error("Format Mismatch");
+                        bibleData = normalizeLayoutStructure(flatVerses);
                     }
-
-                    statusMsg.textContent = "Saving locally to your Android device...";
                     await saveToDB(bibleData);
-                    initBibleView();
-                } catch (err) {
-                    statusMsg.textContent = "Error loading database. Make sure it's valid KJV JSON.";
-                    console.error(err);
+                    switchPanel('reader');
+                    initPresentationEngine();
+                } catch(err) {
+                    alert("Invalid Bible JSON formatting template structure configuration.");
                 }
             };
             reader.readAsText(file);
         });
 
-        function convertToStandardLayout(versesArray) {
-            let structured = [];
-            let bookMap = {};
-
-            versesArray.forEach(v => {
-                let bookName = v.book_name || v.book || "Unknown Book";
-                let chapterNum = parseInt(v.chapter);
-                let textContent = v.text || "";
-
-                if (!bookMap[bookName]) {
-                    bookMap[bookName] = { name: bookName, chapters: [] };
-                    structured.push(bookMap[bookName]);
+        function normalizeLayoutStructure(flatVerses) {
+            let structured = []; let bookMap = {};
+            flatVerses.forEach(v => {
+                let name = v.book_name || v.book || "Unknown";
+                let chNum = parseInt(v.chapter);
+                let text = v.text || "";
+                if(!bookMap[name]) {
+                    bookMap[name] = { name: name, chapters: [] };
+                    structured.push(bookMap[name]);
                 }
-                
-                let chIdx = chapterNum - 1;
-                if (!bookMap[bookName].chapters[chIdx]) {
-                    bookMap[bookName].chapters[chIdx] = [];
-                }
-                bookMap[bookName].chapters[chIdx].push(textContent);
+                let chIdx = chNum - 1;
+                if(!bookMap[name].chapters[chIdx]) bookMap[name].chapters[chIdx] = [];
+                bookMap[name].chapters[chIdx].push(text);
             });
             return structured;
         }
 
-        // --- Android Presentation Layer ---
-        function initBibleView() {
-            if (!bibleData || bibleData.length === 0) return;
-            
-            // Clear out upload container completely 
-            bibleContent.innerHTML = "";
-            
-            // Populate Dropdowns
+        // View Interface Engine Initialization Rules
+        function initPresentationEngine() {
+            if(!bibleData) return;
+            headerDropdowns.style.display = "flex";
             bookSelect.innerHTML = "";
-            bibleData.forEach((book, idx) => {
-                let opt = document.createElement('option');
-                opt.value = idx;
-                opt.textContent = book.name;
+            bibleData.forEach((b, i) => {
+                let opt = document.createElement('option'); opt.value = i; opt.textContent = b.name;
                 bookSelect.appendChild(opt);
             });
-
-            bookSelect.onchange = () => updateChapterDropdown();
-            chapterSelect.onchange = () => renderChapterVerses();
-
-            updateChapterDropdown();
+            bookSelect.onchange = () => populateChapters();
+            chapterSelect.onchange = () => renderChapterView();
+            populateChapters();
         }
 
-        function updateChapterDropdown() {
-            const bookIdx = bookSelect.value;
-            const book = bibleData[bookIdx];
+        function populateChapters() {
+            const book = bibleData[bookSelect.value];
             chapterSelect.innerHTML = "";
-            
-            book.chapters.forEach((_, idx) => {
-                let opt = document.createElement('option');
-                opt.value = idx;
-                opt.textContent = `Ch ${idx + 1}`;
+            book.chapters.forEach((_, i) => {
+                let opt = document.createElement('option'); opt.value = i; opt.textContent = `Ch ${i+1}`;
                 chapterSelect.appendChild(opt);
             });
-
-            renderChapterVerses();
+            renderChapterView();
         }
 
-        function renderChapterVerses() {
-            const bookIdx = bookSelect.value;
-            const chIdx = chapterSelect.value;
-            const verses = bibleData[bookIdx].chapters[chIdx];
-
+        function renderChapterView() {
+            const bIdx = bookSelect.value;
+            const cIdx = chapterSelect.value;
+            const verses = bibleData[bIdx].chapters[cIdx];
             bibleContent.innerHTML = "";
-            mainViewer.scrollTop = 0; // Scroll back up cleanly
+            document.getElementById('mainContentPanel').scrollTop = 0;
 
-            verses.forEach((verseText, idx) => {
-                // Remove raw Strong's codes strings gracefully if viewing a strongs file
-                let cleanText = verseText.replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "");
+            verses.forEach((vText, i) => {
+                let vNum = i + 1;
+                let key = `${bIdx}_${cIdx}_${i}`;
+                let cleanText = vText.replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "");
                 
-                let p = document.createElement('div');
-                p.className = 'verse-layout';
-                p.innerHTML = `<span class="verse-num">${idx + 1}</span>${cleanText}`;
-                bibleContent.appendChild(p);
+                let div = document.createElement('div');
+                
+                // Construct classes using both highlights and active notes
+                const highlightClass = highlights[key] ? `hl-${highlights[key]}` : '';
+                const noteClass = notes[key] ? 'hl-note' : '';
+                div.className = `verse-layout ${highlightClass} ${noteClass}`.trim().replace(/\s+/g, ' ');
+                
+                div.id = `v_pos_${i}`;
+                div.innerHTML = `<span class="verse-num">${vNum}</span>${cleanText}`;
+                
+                // Track mouse/touch variables for precise "long press" events[cite: 1]
+                let pressTimer;
+                const longPressDuration = 500; // Duration limit in milliseconds
+
+                const startPress = (e) => {
+                    pressTimer = setTimeout(() => {
+                        selectedVerseKey = key;
+                        showOptionsMenu();
+                    }, longPressDuration);
+                };
+
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                };
+
+                // Attach touch listeners for responsive mobile interactions
+                div.addEventListener('touchstart', startPress, { passive: true });
+                div.addEventListener('touchend', cancelPress, { passive: true });
+                div.addEventListener('touchmove', cancelPress, { passive: true });
+
+                // Supporting mouse actions for desktop compatibility
+                div.addEventListener('mousedown', startPress);
+                div.addEventListener('mouseup', cancelPress);
+                div.addEventListener('mouseleave', cancelPress);
+
+                bibleContent.appendChild(div);
             });
         }
 
-        // Check if database is cached natively on load
+        // Options Menu Handlers[cite: 1]
+        function showOptionsMenu() {
+            optionsMenu.classList.add('show');
+        }
+
+        function hideOptionsMenu() {
+            optionsMenu.classList.remove('show');
+            selectedVerseKey = null;
+        }
+
+        // Configure Option Menu selection buttons[cite: 1]
+        document.querySelectorAll('.context-option').forEach(opt => {
+            opt.onclick = (e) => {
+                e.stopPropagation();
+                if (!selectedVerseKey) return;
+                
+                const action = opt.getAttribute('data-action');
+                const targetVerseEl = document.querySelector(`.verse-layout[id="v_pos_${selectedVerseKey.split('_')[2]}"]`);
+                
+                // Basic feature actions
+                if (action === 'highlight-text') {
+                    // Cycles through colors on selection
+                    const colors = ['yellow', 'green', 'blue', 'pink', 'none'];
+                    const currentColor = highlights[selectedVerseKey] || 'none';
+                    const nextColorIndex = (colors.indexOf(currentColor) + 1) % colors.length;
+                    const color = colors[nextColorIndex];
+
+                    if (color === 'none') {
+                        delete highlights[selectedVerseKey];
+                    } else {
+                        highlights[selectedVerseKey] = color;
+                    }
+                    localStorage.setItem('bible_highlights', JSON.stringify(highlights));
+                    updateVerseClasses(selectedVerseKey, targetVerseEl);
+                } else if (action === 'add-note' || action === 'edit-note') {
+                    openNotepad(selectedVerseKey);
+                } else if (action === 'search-dictionary') {
+                    alert("Search dictionary feature triggered for the selected verse.");
+                }
+                
+                hideOptionsMenu();
+            };
+        });
+
+        // Close options sheet when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!optionsMenu.contains(e.target)) {
+                hideOptionsMenu();
+            }
+        });
+
+        // Notepad Handlers
+        function openNotepad(key) {
+            activeNoteKey = key;
+            const parts = key.split('_');
+            const bookName = bibleData[parts[0]].name;
+            const chNum = parseInt(parts[1]) + 1;
+            const vNum = parseInt(parts[2]) + 1;
+            
+            notepadTitle.textContent = `Note: ${bookName} ${chNum}:${vNum}`;
+            notepadTextarea.value = notes[key] || '';
+            notepadModal.classList.add('show');
+            notepadTextarea.focus();
+        }
+
+        function closeNotepad() {
+            notepadModal.classList.remove('show');
+            activeNoteKey = null;
+        }
+
+        closeNotepadBtn.onclick = closeNotepad;
+
+        notepadTextarea.oninput = () => {
+            if (!activeNoteKey) return;
+            const val = notepadTextarea.value;
+            if (val.trim() === '') {
+                delete notes[activeNoteKey];
+            } else {
+                notes[activeNoteKey] = val;
+            }
+            localStorage.setItem('bible_notes', JSON.stringify(notes));
+            
+            const targetVerseEl = document.querySelector(`.verse-layout[id="v_pos_${activeNoteKey.split('_')[2]}"]`);
+            updateVerseClasses(activeNoteKey, targetVerseEl);
+        };
+
+        function updateVerseClasses(key, el) {
+            if (!el) return;
+            const highlightClass = highlights[key] ? `hl-${highlights[key]}` : '';
+            const noteClass = notes[key] ? 'hl-note' : '';
+            el.className = `verse-layout ${highlightClass} ${noteClass}`.trim().replace(/\s+/g, ' ');
+        }
+
+        // Interface Switcher (Reader, Search, Settings)
+        function switchPanel(panelId) {
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            hideOptionsMenu();
+
+            if (!bibleData) {
+                document.getElementById('uploadPanel').classList.add('active');
+                headerDropdowns.style.display = "none";
+                appTitle.textContent = "Holy Bible";
+                return;
+            }
+
+            if (panelId === 'reader') {
+                document.getElementById('readerPanel').classList.add('active');
+                document.getElementById('tabRead').classList.add('active');
+                headerDropdowns.style.display = "flex";
+                appTitle.textContent = "";
+            } else if (panelId === 'search') {
+                document.getElementById('searchPanel').classList.add('active');
+                document.getElementById('tabSearch').classList.add('active');
+                headerDropdowns.style.display = "none";
+                appTitle.textContent = "Search Content";
+            } else if (panelId === 'settings') {
+                document.getElementById('settingsPanel').classList.add('active');
+                document.getElementById('tabSettings').classList.add('active');
+                headerDropdowns.style.display = "none";
+                appTitle.textContent = "Application Configuration";
+            }
+        }
+
+        // Navigation Bindings
+        document.getElementById('tabRead').onclick = () => switchPanel('reader');
+        document.getElementById('tabSearch').onclick = () => switchPanel('search');
+        document.getElementById('tabSettings').onclick = () => switchPanel('settings');
+
+        // Text Search Module Implementation
+        searchInput.oninput = () => {
+            const query = searchInput.value.toLowerCase().trim();
+            searchResults.innerHTML = "";
+            if (query.length < 3 || !bibleData) return;
+
+            const resultsFragment = document.createDocumentFragment();
+
+            bibleData.forEach((book, bIdx) => {
+                book.chapters.forEach((chapter, cIdx) => {
+                    chapter.forEach((verseText, vIdx) => {
+                        if (verseText.toLowerCase().includes(query)) {
+                            let cleanText = verseText.replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "");
+                            
+                            const div = document.createElement('div');
+                            div.className = "search-result-item";
+                            div.innerHTML = `
+                                <div class="search-result-title">${book.name} ${cIdx + 1}:${vIdx + 1}</div>
+                                <div style="font-size: 15px; line-height: 1.5;">${cleanText}</div>
+                            `;
+                            
+                            div.onclick = () => {
+                                bookSelect.value = bIdx;
+                                populateChapters();
+                                chapterSelect.value = cIdx;
+                                renderChapterView();
+                                switchPanel('reader');
+                                
+                                // Smooth scroll target verse into view
+                                setTimeout(() => {
+                                    const targetEl = document.getElementById(`v_pos_${vIdx}`);
+                                    if (targetEl) {
+                                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        const origColor = targetEl.style.backgroundColor;
+                                        targetEl.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                                        setTimeout(() => {
+                                            targetEl.style.backgroundColor = origColor;
+                                        }, 2000);
+                                    }
+                                }, 150);
+                            };
+                            resultsFragment.appendChild(div);
+                        }
+                    });
+                });
+            });
+            searchResults.appendChild(resultsFragment);
+        };
+
+        // Data Management Workflows
+        document.getElementById('btnClearData').onclick = async () => {
+            if (confirm("Are you sure you want to completely clear the loaded Bible database? All configurations will reset.")) {
+                const db = await openDB();
+                const tx = db.transaction("modules", "readwrite");
+                tx.objectStore("modules").clear();
+                tx.oncomplete = () => {
+                    bibleData = null;
+                    highlights = {};
+                    notes = {};
+                    localStorage.removeItem('bible_highlights');
+                    localStorage.removeItem('bible_notes');
+                    switchPanel('reader');
+                };
+            }
+        };
+
+        // Automatic DB Initial State Probe Pipeline
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const cached = await loadFromDB();
-                if (cached) {
-                    bibleData = cached;
-                    initBibleView();
+                const cachedData = await loadFromDB();
+                if (cachedData) {
+                    bibleData = cachedData;
+                    switchPanel('reader');
+                    initPresentationEngine();
+                } else {
+                    switchPanel('upload');
                 }
             } catch (err) {
-                console.error("Device local system storage exception:", err);
+                switchPanel('upload');
             }
         });
     </script>
