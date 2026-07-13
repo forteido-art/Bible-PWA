@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TKH Bible</title>
+    <title>Offline Bible App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.293.0/lucide.min.js"></script>
     <style>
         :root {
@@ -129,6 +129,12 @@
             cursor: pointer;
         }
 
+        .status-msg {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+        }
+
         /* Bible Text Layout */
         .verse-container {
             margin-bottom: 18px;
@@ -153,6 +159,7 @@
         .verse-text {
             font-size: 1.1rem;
             line-height: 1.6;
+            cursor: pointer;
         }
 
         /* Strongs numbers formatting if using kjv_strongs.json */
@@ -263,12 +270,13 @@
         <div id="initialSetup" class="upload-section">
             <h3>Welcome to your Offline Bible</h3>
             <p style="color: var(--text-muted); margin-top: 8px; font-size:0.9rem;">
-                To enable 100% offline usage, select either <b>kjv.json</b> or <b>kjv_strongs.json</b> from your device. It will save locally forever.
+                Select either <b>kjv.json</b> or <b>kjv_strongs.json</b> from your device. It will save locally to the browser's database for instant offline access.
             </p>
             <label class="upload-btn">
                 Select Bible JSON File
                 <input type="file" id="bibleDataFile" accept=".json" style="display: none;">
             </label>
+            <div id="statusMsg" class="status-msg"></div>
         </div>
         <div id="bibleContent"></div>
     </main>
@@ -288,7 +296,6 @@
     <script>
         // State variables
         let bibleData = null;
-        let isStrongsMode = false;
         let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
 
         // DOM elements
@@ -299,6 +306,7 @@
         const mainViewer = document.getElementById('mainViewer');
         const bibleContent = document.getElementById('bibleContent');
         const initialSetup = document.getElementById('initialSetup');
+        const statusMsg = document.getElementById('statusMsg');
         
         const bookSelect = document.getElementById('bookSelect');
         const chapterSelect = document.getElementById('chapterSelect');
@@ -306,6 +314,47 @@
 
         // Initialize App Icons
         lucide.createIcons();
+
+        // --- IndexedDB Configuration for Unlimited Offline Storage ---
+        const DB_NAME = 'OfflineBibleDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'bible_data';
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME);
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function saveToDB(data) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(data, 'kjv_data');
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadFromDB() {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(STORE_NAME, 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get('kjv_data');
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
 
         // 1. Expandable Search Box Interaction
         searchToggleBtn.addEventListener('click', () => {
@@ -335,7 +384,6 @@
             renderCurrentChapter();
         }
 
-        // Close search via text input listeners
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 executeSearch(searchInput.value.trim());
@@ -347,40 +395,37 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            statusMsg.textContent = "Processing file... Please wait.";
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = async function(event) {
                 try {
                     const parsed = JSON.parse(event.target.result);
                     
-                    // Normalize standard structure vs Strongs JSON structure
+                    // Parse based on structure format
                     if (Array.isArray(parsed)) {
-                        bibleData = parsed; // Standard structure
-                        isStrongsMode = false;
-                    } else if (parsed.metadata || parsed[0]?.book_name) {
-                        // Strongs format processing (flat verse listing or nested array conversion)
+                        bibleData = parsed;
+                    } else if (parsed.verses || parsed.metadata) {
                         bibleData = convertStrongsToStandard(parsed);
-                        isStrongsMode = true;
+                    } else {
+                        throw new Error("Unknown structure format");
                     }
 
-                    localStorage.setItem('cached_bible_data', JSON.stringify(bibleData));
-                    localStorage.setItem('bible_mode_strongs', isStrongsMode);
+                    statusMsg.textContent = "Saving to secure offline database...";
+                    await saveToDB(bibleData);
+                    statusMsg.textContent = "";
                     initBibleView();
                 } catch (err) {
-                    alert("Error processing file. Please ensure it matches your Bible JSON file.");
+                    statusMsg.textContent = "";
+                    alert("Error processing file. Please ensure it is the valid kjv.json or kjv_strongs.json file.");
                     console.error(err);
                 }
             };
             reader.readAsText(file);
         });
 
-        // Convert Flat structure format into interactive Book->Chapter->Verse hierarchy
+        // Structure Standardizer for structural alignment
         function convertStrongsToStandard(data) {
-            let versesArray = Array.isArray(data) ? data : data.verses || [];
-            if (!Array.isArray(versesArray) && data.module) {
-                // Alternately check object signatures
-                versesArray = Object.values(data).filter(v => v.book_name);
-            }
-            
+            let versesArray = data.verses || (Array.isArray(data) ? data : []);
             let structured = [];
             let bookMap = {};
 
@@ -403,7 +448,6 @@
             initialSetup.style.display = 'none';
             populateBooks();
             
-            // Default to Genesis 1
             bookSelect.selectedIndex = 0;
             updateChapters();
         }
@@ -420,6 +464,7 @@
 
         function updateChapters() {
             const bookIdx = bookSelect.value;
+            if (!bibleData[bookIdx]) return;
             const chapters = bibleData[bookIdx].chapters;
             
             chapterSelect.innerHTML = '';
@@ -435,6 +480,7 @@
         function updateVerses() {
             const bookIdx = bookSelect.value;
             const chIdx = chapterSelect.value;
+            if (!bibleData[bookIdx] || !bibleData[bookIdx].chapters[chIdx]) return;
             const verses = bibleData[bookIdx].chapters[chIdx] || [];
             
             verseSelect.innerHTML = '';
@@ -471,16 +517,16 @@
                 const hasNote = notes[noteKey] ? 'inline-flex' : 'none';
                 const savedNoteText = notes[noteKey] || '';
                 
-                // Clean Strongs tags dynamically if rendering Strongs files visually clear
-                let processedText = text.replace(/\{G\d+\}/g, (match) => {
+                // Formats Strong's Greek/Hebrew tags cleanly if using kjv_strongs.json
+                let processedText = text.replace(/\{[GH]\d+\}/g, (match) => {
                     return `<span class="strongs-num">${match.replace(/[{}]/g, '')}</span>`;
                 });
 
                 html += `
                     <div class="verse-container" id="v_${idx}">
                         <span class="verse-num">${verseNum}</span>
-                        <span class="verse-text" onclick="toggleNoteArea('${noteKey}', ${idx})">${processedText}</span>
-                        <span class="note-indicator" id="ind_${noteKey}" style="display: ${hasNote}" onclick="toggleNoteArea('${noteKey}', ${idx})">
+                        <span class="verse-text" onclick="toggleNoteArea('${noteKey}')">${processedText}</span>
+                        <span class="note-indicator" id="ind_${noteKey}" style="display: ${hasNote}" onclick="toggleNoteArea('${noteKey}')">
                             <i data-lucide="sticky-note" style="width:14px; height:14px; margin-right:2px;"></i> note
                         </span>
                         <textarea class="note-area" id="note_${noteKey}" placeholder="Write a note for this verse..." oninput="saveNote('${noteKey}', this.value)">${savedNoteText}</textarea>
@@ -496,17 +542,14 @@
         function scrollToVerse(verseIdx) {
             const target = document.getElementById(`v_${verseIdx}`);
             if (target) {
-                // Clear previous highlights
                 document.querySelectorAll('.verse-container').forEach(el => el.classList.remove('highlight'));
-                
-                // Set interactive focus smooth scroll
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 target.classList.add('highlight');
             }
         }
 
         // 5. Notes Engine
-        window.toggleNoteArea = function(noteKey, idx) {
+        window.toggleNoteArea = function(noteKey) {
             const el = document.getElementById(`note_${noteKey}`);
             if (el.style.display === 'block') {
                 el.style.display = 'none';
@@ -542,19 +585,20 @@
                             resultsCount++;
                             let item = document.createElement('div');
                             item.className = 'search-item';
+                            
+                            let cleanText = verseText.replace(/\{[GH]\d+\}/g, '');
+                            
                             item.innerHTML = `
                                 <div class="search-item-header">${book.name} ${cIdx + 1}:${vIdx + 1}</div>
-                                <div style="font-size:0.95rem; line-height:1.4;">${verseText.replace(/\{G\d+\}/g, '')}</div>
+                                <div style="font-size:0.95rem; line-height:1.4;">${cleanText}</div>
                             `;
                             
-                            // Direct click redirection event to exact verse
                             item.addEventListener('click', () => {
                                 bookSelect.value = bIdx;
                                 updateChapters();
                                 chapterSelect.value = cIdx;
                                 updateVerses();
                                 
-                                // Close Search window seamlessly and scroll
                                 searchContainer.classList.remove('expanded');
                                 appTitle.style.opacity = '1';
                                 searchInput.value = '';
@@ -563,7 +607,7 @@
 
                                 setTimeout(() => {
                                     scrollToVerse(vIdx);
-                                }, 200);
+                                }, 300);
                             });
                             
                             bibleContent.appendChild(item);
@@ -573,18 +617,21 @@
             });
 
             if (resultsCount === 0) {
-                bibleContent.innerHTML += `<p style="color: var(--text-muted);">No occurrences found.</p>`;
+                bibleContent.innerHTML += `<p style="color: var(--text-muted);">No matches found.</p>`;
             }
             mainViewer.scrollTop = 0;
         }
 
-        // On initialization check database cache existence
-        window.addEventListener('DOMContentLoaded', () => {
-            const cached = localStorage.getItem('cached_bible_data');
-            if (cached) {
-                bibleData = JSON.parse(cached);
-                isStrongsMode = localStorage.getItem('bible_mode_strongs') === 'true';
-                initBibleView();
+        // On load, check the high-capacity IndexedDB database
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const cached = await loadFromDB();
+                if (cached) {
+                    bibleData = cached;
+                    initBibleView();
+                }
+            } catch (err) {
+                console.error("Error checking offline cache store:", err);
             }
         });
     </script>
