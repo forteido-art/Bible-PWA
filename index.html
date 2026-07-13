@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TKH Bible</title>
     
-    <!-- HIGH-COMFORT DARK BLUE MOBILE INTERFACE -->
     <style>
         :root {
             --bg-dark-blue: #0B1528;
@@ -35,7 +34,6 @@
             overflow: hidden;
         }
 
-        /* Top Header UI */
         .app-header {
             background-color: var(--bg-surface);
             height: 60px;
@@ -63,7 +61,6 @@
             padding: 8px;
         }
 
-        /* Content Reading Canvas */
         .reading-container {
             flex: 1;
             overflow-y: auto;
@@ -94,7 +91,6 @@
             user-select: none;
         }
 
-        /* Bottom Menu UI Controls */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -135,7 +131,6 @@
             text-overflow: ellipsis;
         }
 
-        /* Responsive Overlay Modals */
         .modal {
             position: fixed;
             top: 0;
@@ -200,10 +195,6 @@
             cursor: pointer;
         }
 
-        .search-item: some {
-            background-color: var(--border-color);
-        }
-
         .search-item-title {
             color: var(--accent-gold);
             font-size: 0.85rem;
@@ -217,7 +208,6 @@
             line-height: 1.5;
         }
 
-        /* Picker Layout Styles */
         .text-center { text-align: center; }
         .modal-content h3 { margin-bottom: 16px; font-weight: 600;}
         
@@ -255,26 +245,26 @@
 </head>
 <body>
 
-    <!-- Top Navigation Bar -->
+    <!-- Header Navigation -->
     <header class="app-header">
-        <div style="width: 32px;"></div> <!-- Spacer balance -->
+        <div style="width: 32px;"></div>
         <h1 id="current-title">Loading...</h1>
         <button id="search-trigger" class="icon-btn">🔍</button>
     </header>
 
-    <!-- Main Reading View -->
+    <!-- Reading Window Pane -->
     <main class="reading-container">
         <div id="bible-viewer" class="bible-text-area"></div>
     </main>
 
-    <!-- Bottom Navigation Controls -->
+    <!-- Footer Controller System -->
     <nav class="bottom-nav">
         <button id="prev-chap" class="nav-arrow">◀ Prev</button>
         <button id="picker-trigger" class="nav-center">Select Book</button>
         <button id="next-chap" class="nav-arrow">Next ▶</button>
     </nav>
 
-    <!-- Overlay Search Modal -->
+    <!-- Interactive Query Search Dropdown -->
     <div id="search-modal" class="modal hidden">
         <div class="modal-content">
             <div class="search-header">
@@ -285,7 +275,7 @@
         </div>
     </div>
 
-    <!-- Book Selection Dropdown Drawer -->
+    <!-- Chapter Layout Selectors -->
     <div id="picker-modal" class="modal hidden">
         <div class="modal-content text-center">
             <h3>Jump to Scripture</h3>
@@ -297,68 +287,70 @@
         </div>
     </div>
 
-    <!-- 1. LINKS TO YOUR DATA FILE -->
-    <script src="bible.js"></script>
-
-    <!-- 2. HIGH SPEED LOGIC ENGINE CONFIGURED FOR KEY-VALUE BIBLE OBJECTS -->
+    <!-- MAIN CONTROL JAVASCRIPT ENGINE -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            
-            // Auto-detect variable link or fall back to fallback mock objects securely
-            let rawBibleData = window.bibleData || window.bible || window.bibleText;
-            
-            // If data is encapsulated inside an extra parent root property like "books" or "bible"
-            if (rawBibleData && rawBibleData.books) rawBibleData = rawBibleData.books;
-
-            // Secure fail-safe structure if the file fails to bind context values
-            if (!rawBibleData) {
-                rawBibleData = {
-                    "2 Kings": {
-                        "11": { "16": "And they laid hands on her...", "17": "And Jehoiada made a covenant..." },
-                        "12": { "1": "In the seventh year of Jehu...", "21": "For Jozachar the son of Shimeath..." },
-                        "13": { "1": "In the three and twentieth year...", "10": "In the thirty and seventh year..." }
-                    }
-                };
-            }
-
-            // Standardize into indexable array models for fast navigation steps
-            const bookKeys = Object.keys(rawBibleData);
+            let rawBibleData = null;
+            let bookKeys = [];
             let currentBookIdx = 0;
-            let currentChapterIdx = 0; // Points to the first available chapter index array position
+            let currentChapterIdx = 0;
 
-            // UI Targets Mapping
+            // Interface Cache Selectors
             const viewer = document.getElementById("bible-viewer");
             const currentTitle = document.getElementById("current-title");
             const prevBtn = document.getElementById("prev-chap");
             const nextBtn = document.getElementById("next-chap");
+            
             const searchModal = document.getElementById("search-modal");
             const searchTrigger = document.getElementById("search-trigger");
             const closeSearch = document.getElementById("close-search");
-const searchInput = document.getElementById("search-input");
-const searchResults = document.getElementById("search-results");
-const pickerModal = document.getElementById("picker-modal");
-const pickerTrigger = document.getElementById("picker-trigger");
-const bookSelect = document.getElementById("book-select");
-const chapterSelect = document.getElementById("chapter-select");
-const applyPicker = document.getElementById("apply-picker");
-// Fetch chapter structures safely via pointer keys
+            const searchInput = document.getElementById("search-input");
+            const searchResults = document.getElementById("search-results");
+
+            const pickerModal = document.getElementById("picker-modal");
+            const pickerTrigger = document.getElementById("picker-trigger");
+            const bookSelect = document.getElementById("book-select");
+            const chapterSelect = document.getElementById("chapter-select");
+            const applyPicker = document.getElementById("apply-picker");
+
+            // ASYNC FETCH LOADER ENGINE
+            async function loadBibleJSON() {
+                try {
+                    // Fetches local file instantly (Perfect for Offline Server environments & Vercel setups)
+                    const response = await fetch('kjv.json');
+                    if (!response.ok) throw new Error("Failed to load JSON file");
+                    
+                    let data = await response.json();
+                    
+                    // Unwraps data safely if the JSON has a root key like "books"
+                    if (data && data.books) data = data.books;
+                    if (data && data.bible) data = data.bible;                   
+rawBibleData = data;
+bookKeys = Object.keys(rawBibleData);
+// Initialize system
+initSelectors();
+renderChapter();
+} catch (error) {
+console.error(error);
+viewer.innerHTML = <div class="text-center" style="padding-top:40px; color:red;"> Error loading kjv.json.<br>Verify file is in the same folder and casing is correct. </div>;
+}
+}
 function getSortedChapters(bookName) {
 return Object.keys(rawBibleData[bookName]).sort((a, b) => parseInt(a) - parseInt(b));
 }
 function getSortedVerses(bookName, chapterKey) {
 return Object.keys(rawBibleData[bookName][chapterKey]).sort((a, b) => parseInt(a) - parseInt(b));
 }
-// 1. Core Render Method
+// 1. Text Rendering Framework
 function renderChapter() {
+if (!rawBibleData) return;
 const bookName = bookKeys[currentBookIdx];
 const chaptersList = getSortedChapters(bookName);
 const targetChapterKey = chaptersList[currentChapterIdx];
-// Set Header and Selector label values
 currentTitle.textContent = ${bookName} ${targetChapterKey};
 pickerTrigger.textContent = ${bookName} ${targetChapterKey};
 const chapterObject = rawBibleData[bookName][targetChapterKey];
 const versesList = getSortedVerses(bookName, targetChapterKey);
-// Compile markup dynamically loop
 let htmlOutput = "";
 for (let i = 0; i < versesList.length; i++) {
 const verseNum = versesList[i];
@@ -366,20 +358,21 @@ const verseText = chapterObject[verseNum];
 htmlOutput += <div class="verse-row"> <span class="verse-num">${verseNum}</span>${verseText} </div>;
 }
 viewer.innerHTML = htmlOutput;
-document.querySelector('.reading-container').scrollTop = 0; // Scroll back to peak
+document.querySelector('.reading-container').scrollTop = 0;
 }
-// 2. Sequential Step Engine Navigation
+// 2. Navigation Control Pipeline
 function navigate(direction) {
+if (!rawBibleData) return;
 const bookName = bookKeys[currentBookIdx];
 const chaptersList = getSortedChapters(bookName);
-if (direction === 1) { // Forward tracking
+if (direction === 1) {
 if (currentChapterIdx < chaptersList.length - 1) {
 currentChapterIdx++;
 } else if (currentBookIdx < bookKeys.length - 1) {
 currentBookIdx++;
 currentChapterIdx = 0;
 }
-} else { // Reverse tracking
+} else {
 if (currentChapterIdx > 0) {
 currentChapterIdx--;
 } else if (currentBookIdx > 0) {
@@ -390,7 +383,7 @@ currentChapterIdx = getSortedChapters(prevBookName).length - 1;
 }
 renderChapter();
 }
-// 3. Fast String Scan Database Search Algorithm
+// 3. Optimized Offline Content Search Algorithm
 function runSearch(query) {
 searchResults.innerHTML = "";
 const cleanQuery = query.toLowerCase().trim();
@@ -412,7 +405,6 @@ matches++;
 const row = document.createElement("div");
 row.className = "search-item";
 row.innerHTML = <div class="search-item-title">${bName} ${cKey}:${vKey}</div> <div class="search-item-text">${text}</div>;
-// Save reference capture indexes to close out modal on click seamlessly
 const targetBookIdx = b;
 const targetChList = getSortedChapters(bName);
 const targetChIdx = targetChList.indexOf(cKey);
@@ -424,7 +416,7 @@ searchModal.classList.add("hidden");
 searchInput.value = "";
 };
 fragment.appendChild(row);
-if (matches >= 80) break; // Memory safety execution lock limit
+if (matches >= 80) break;
 }
 }
 if (matches >= 80) break;
@@ -437,7 +429,7 @@ searchResults.innerHTML = <div class="search-item text-center">No matching scrip
 searchResults.appendChild(fragment);
 }
 }
-// 4. Modal Picklists Syncing Elements
+// 4. Modal Picklists Initializer
 function initSelectors() {
 bookSelect.innerHTML = bookKeys.map((name, i) => <option value="${i}">${name}</option>).join('');
 syncChaptersDropdown();
@@ -448,7 +440,7 @@ const chosenBookName = bookKeys[bookSelect.value];
 const chaptersList = getSortedChapters(chosenBookName);
 chapterSelect.innerHTML = chaptersList.map((chKey, i) => <option value="${i}">Chapter ${chKey}</option>).join('');
 }
-// 5. Interface Action Hooks Wireframing
+// 5. Native Interface Event Hookups
 prevBtn.addEventListener("click", () => navigate(-1));
 nextBtn.addEventListener("click", () => navigate(1));
 searchTrigger.addEventListener("click", () => {
@@ -461,6 +453,7 @@ searchInput.value = "";
 });
 searchInput.addEventListener("input", (e) => runSearch(e.target.value));
 pickerTrigger.addEventListener("click", () => {
+if (!rawBibleData) return;
 bookSelect.value = currentBookIdx;
 syncChaptersDropdown();
 chapterSelect.value = currentChapterIdx;
@@ -472,15 +465,11 @@ currentChapterIdx = parseInt(chapterSelect.value);
 renderChapter();
 pickerModal.classList.add("hidden");
 });
-// Backdrop click closing windows safety
 window.onclick = (e) => {
 if (e.target === searchModal) searchModal.classList.add("hidden");
 if (e.target === pickerModal) pickerModal.classList.add("hidden");
 };
-// Start up engine runtime loop initialization
-initSelectors();
-renderChapter();
+// Bootstrap Execute Operation
+loadBibleJSON();
 });
-
-
 
