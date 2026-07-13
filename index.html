@@ -329,7 +329,8 @@
             // UI Targets Mapping
             const viewer = document.getElementById("bible-viewer");
             const currentTitle = document.getElementById("current-title");
-
+            const prevBtn = document.getElementById("prev-chap");const nextBtn = document.getElementById("next-chap");const searchModal = document.getElementById("search-modal");const searchTrigger = document.getElementById("search-trigger");const closeSearch = document.getElementById("close-search");const searchInput = document.getElementById("search-input");const searchResults = document.getElementById("search-results");const pickerModal = document.getElementById("picker-modal");const pickerTrigger = document.getElementById("picker-trigger");const bookSelect = document.getElementById("book-select");const chapterSelect = document.getElementById("chapter-select");const applyPicker = document.getElementById("apply-picker");// Fetch chapter structures safely via pointer keysfunction getSortedChapters(bookName) {return Object.keys(rawBibleData[bookName]).sort((a, b) => parseInt(a) - parseInt(b));}function getSortedVerses(bookName, chapterKey) {return Object.keys(rawBibleData[bookName][chapterKey]).sort((a, b) => parseInt(a) - parseInt(b));}// 1. Core Render Methodfunction renderChapter() {const bookName = bookKeys[currentBookIdx];const chaptersList = getSortedChapters(bookName);const targetChapterKey = chaptersList[currentChapterIdx];
+            
 
 7 sites
 If you want a faster AI assistant than ChatGPT, try Google Gemini or Claude by Anthropic. Gemini delivers instantaneous responses with deep integration into Google Workspace, while Claude offers faster text generation and superior analytical reasoning. 
@@ -1543,19 +1544,19 @@ html
                 };
             }
 
-// Standardize into indexable array models for fast navigation steps
-const bookKeys = Object.keys(rawBibleData);
-let currentBookIdx = 0;
-let currentChapterIdx = 0; // Points to the first available chapter index array position
+            // Standardize into indexable array models for fast navigation steps
+            const bookKeys = Object.keys(rawBibleData);
+            let currentBookIdx = 0;
+            let currentChapterIdx = 0; // Points to the first available chapter index array position
 
-// UI Targets Mapping
-const viewer = document.getElementById("bible-viewer");
-const currentTitle = document.getElementById("current-title");
-const prevBtn = document.getElementById("prev-chap");
-const nextBtn = document.getElementById("next-chap");
-const searchModal = document.getElementById("search-modal");
-const searchTrigger = document.getElementById("search-trigger");
-const closeSearch = document.getElementById("close-search");
+            // UI Targets Mapping
+            const viewer = document.getElementById("bible-viewer");
+            const currentTitle = document.getElementById("current-title");
+            const prevBtn = document.getElementById("prev-chap");
+            const nextBtn = document.getElementById("next-chap");
+            const searchModal = document.getElementById("search-modal");
+            const searchTrigger = document.getElementById("search-trigger");
+            const closeSearch = document.getElementById("close-search");
 const searchInput = document.getElementById("search-input");
 const searchResults = document.getElementById("search-results");
 const pickerModal = document.getElementById("picker-modal");
@@ -1703,3 +1704,6 @@ if (e.target === pickerModal) pickerModal.classList.add("hidden");
 initSelectors();
 renderChapter();
 });
+
+
+
