@@ -313,20 +313,38 @@
             const chapterSelect = document.getElementById("chapter-select");
             const applyPicker = document.getElementById("apply-picker");
 
-            // ASYNC FETCH LOADER ENGINE
-            async function loadBibleJSON() {
-                try {
-                    // Fetches local file instantly (Perfect for Offline Server environments & Vercel setups)
-                    const response = await fetch('kjv.json');
-                    if (!response.ok) throw new Error("Failed to load JSON file");
-                    
-                    let data = await response.json();
-                    
-                    // Unwraps data safely if the JSON has a root key like "books"
-                    if (data && data.books) data = data.books;
-                    if (data && data.bible) data = data.bible;                   
-rawBibleData = data;
-bookKeys = Object.keys(rawBibleData);
+// REPLACE THE OLD loadBibleJSON FUNCTION WITH THIS DIAGNOSTIC VERSION:
+async function loadBibleJSON() {
+    try {
+        const response = await fetch('kjv.json'); // Double check if this needs to be 'KJV.json'
+        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+        
+        let data = await response.json();
+        
+        if (data && data.books) data = data.books;
+        if (data && data.bible) data = data.bible;
+
+        rawBibleData = data;
+        bookKeys = Object.keys(rawBibleData);
+
+        initSelectors();
+        renderChapter();
+    } catch (error) {
+        console.error(error);
+        // This will print the exact issue directly onto your dark blue canvas area
+        viewer.innerHTML = `
+            <div class="text-center" style="padding:40px 20px; color:#F87171; font-family:sans-serif; line-height:1.5;">
+                <p style="font-weight:bold; font-size:1.2rem; margin-bottom:12px;">⚠️ Connection Error</p>
+                <p style="color:var(--text-muted); font-size:0.95rem;">${error.message}</p>
+                <p style="font-size:0.85rem; margin-top:16px; background:#1E293B; padding:10px; border-radius:6px; color:#A7F3D0;">
+                    Tip: Verify your file name casing matches exactly on GitHub/Vercel.
+                </p>
+            </div>
+        `;
+        currentTitle.textContent = "Error";
+    }
+}
+
 // Initialize system
 initSelectors();
 renderChapter();
