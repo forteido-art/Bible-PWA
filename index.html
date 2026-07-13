@@ -2,498 +2,311 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TKH Bible</title>
-    
     <style>
         :root {
-            --bg-dark-blue: #0B1528;
-            --bg-surface: #13223C;
-            --text-primary: #E2E8F0;
-            --text-muted: #94A3B8;
-            --accent-gold: #F59E0B;
-            --border-color: #1E293B;
-            --font-reading: 'Georgia', serif;
-            --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --bg-dark: #0a192f;
+            --bg-card: #172a45;
+            --text-main: #e6f1ff;
+            --text-muted: #8892b0;
+            --accent: #64ffda;
+            --accent-hover: #00b4d8;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-dark-blue);
-            color: var(--text-primary);
-            font-family: var(--font-ui);
-            height: 100vh;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
+            height: 100vh;
             overflow: hidden;
         }
 
-        .app-header {
-            background-color: var(--bg-surface);
-            height: 60px;
+        /* Top Bar */
+        header {
+            background: rgba(10, 25, 47, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(136, 146, 176, 0.2);
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 16px;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
             z-index: 10;
         }
 
-        .app-header h1 {
-            font-size: 1.15rem;
-            font-weight: 600;
+        h1 {
+            font-size: 1.2rem;
+            color: var(--accent);
         }
 
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 1.3rem;
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        select {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.9rem;
             cursor: pointer;
-            padding: 8px;
+            max-width: 150px;
         }
 
-        .reading-container {
+        /* Main Content */
+        main {
             flex: 1;
             overflow-y: auto;
-            padding: 24px 20px 84px 20px;
-            scroll-behavior: smooth;
-        }
-
-        .bible-text-area {
-            max-width: 650px;
+            padding: 20px;
+            max-width: 800px;
             margin: 0 auto;
-            line-height: 1.8;
-        }
-
-        .verse-row {
-            margin-bottom: 18px;
-            font-family: var(--font-reading);
-            font-size: 1.2rem;
-            text-align: left;
-        }
-
-        .verse-num {
-            font-family: var(--font-ui);
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-            vertical-align: super;
-            margin-right: 8px;
-            user-select: none;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 64px;
-            background-color: var(--bg-surface);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 12px;
-            z-index: 10;
-        }
-
-        .nav-arrow {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            padding: 12px 16px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .nav-center {
-            background-color: var(--border-color);
-            color: var(--text-primary);
-            border: none;
-            padding: 10px 18px;
-            border-radius: 20px;
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 0.9rem;
-            max-width: 50%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(7, 13, 24, 0.96);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-        }
-
-        .modal.hidden {
-            display: none;
-        }
-
-        .modal-content {
             width: 100%;
-            max-width: 600px;
-            background-color: var(--bg-surface);
-            display: flex;
-            flex-direction: column;
+        }
+
+        .verse-container {
+            background: var(--bg-card);
             padding: 16px;
-        }
-
-        .search-header {
-            display: flex;
-            gap: 12px;
+            border-radius: 10px;
             margin-bottom: 16px;
-            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid transparent;
+            transition: border-color 0.3s ease;
         }
 
-        #search-input {
-            flex: 1;
-            background-color: var(--bg-dark-blue);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
+        .verse-container:hover {
+            border-left-color: var(--accent);
+        }
+
+        .verse-header {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .verse-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+
+        .strong-number {
+            color: var(--accent-hover);
+            font-size: 0.8rem;
+            vertical-align: super;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+
+        /* Bottom Drawer for Strongs */
+        #drawer {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: var(--bg-card);
+            padding: 20px;
+            border-top: 1px solid var(--text-muted);
+            transition: bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            max-height: 40vh;
+            overflow-y: auto;
+            z-index: 20;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
         .close-btn {
             background: none;
             border: none;
             color: var(--text-muted);
-            font-size: 1.4rem;
-            padding: 0 8px;
+            font-size: 1.5rem;
             cursor: pointer;
         }
 
-        .results-container {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
-
-        .search-item {
-            padding: 14px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-        }
-
-        .search-item-title {
-            color: var(--accent-gold);
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-
-        .search-item-text {
-            font-family: var(--font-reading);
-            font-size: 1.05rem;
+        #strong-content {
+            font-size: 1rem;
             line-height: 1.5;
+            color: var(--text-main);
         }
 
-        .text-center { text-align: center; }
-        .modal-content h3 { margin-bottom: 16px; font-weight: 600;}
-        
-        .picker-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin: 20px 0;
-        }
-
-        select {
-            width: 100%;
-            background-color: var(--bg-dark-blue);
-            color: var(--text-primary);
-            padding: 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .primary-btn {
-            background-color: var(--accent-gold);
-            color: #000;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: bold;
-            width: 100%;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 10px;
+        /* Fallbacks */
+        .loading, .error {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Navigation -->
-    <header class="app-header">
-        <div style="width: 32px;"></div>
-        <h1 id="current-title">Loading...</h1>
-        <button id="search-trigger" class="icon-btn">🔍</button>
+    <header>
+        <h1>TKH Bible</h1>
+        <div class="controls">
+            <select id="book-select"></select>
+            <select id="chapter-select"></select>
+        </div>
     </header>
 
-    <!-- Reading Window Pane -->
-    <main class="reading-container">
-        <div id="bible-viewer" class="bible-text-area"></div>
+    <main id="bible-content">
+        <div class="loading">Loading scriptures offline...</div>
     </main>
 
-    <!-- Footer Controller System -->
-    <nav class="bottom-nav">
-        <button id="prev-chap" class="nav-arrow">◀ Prev</button>
-        <button id="picker-trigger" class="nav-center">Select Book</button>
-        <button id="next-chap" class="nav-arrow">Next ▶</button>
-    </nav>
-
-    <!-- Interactive Query Search Dropdown -->
-    <div id="search-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="search-header">
-                <input type="text" id="search-input" placeholder="Type keyword to search offline..." autocomplete="off">
-                <button id="close-search" class="close-btn">✕</button>
-            </div>
-            <div id="search-results" class="results-container"></div>
+    <div id="drawer">
+        <div class="drawer-header">
+            <h3>Strong's Definition</h3>
+            <button class="close-btn" onclick="closeDrawer()">×</button>
         </div>
+        <div id="strong-content">Click a Strong's number to view details.</div>
     </div>
 
-    <!-- Chapter Layout Selectors -->
-    <div id="picker-modal" class="modal hidden">
-        <div class="modal-content text-center">
-            <h3>Jump to Scripture</h3>
-            <div class="picker-grid">
-                <select id="book-select"></select>
-                <select id="chapter-select"></select>
-            </div>
-            <button id="apply-picker" class="primary-btn">Open Chapter</button>
-        </div>
-    </div>
-
-    <!-- MAIN CONTROL JAVASCRIPT ENGINE -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            let rawBibleData = null;
-            let bookKeys = [];
-            let currentBookIdx = 0;
-            let currentChapterIdx = 0;
+        let bibleData = null;
+        let strongsData = null;
+        
+        // Complete 66 Books and Chapter Counts mapping
+        const bookChapters = {
+            "Genesis": 50, "Exodus": 40, "Leviticus": 27, "Numbers": 36, "Deuteronomy": 34,
+            "Joshua": 24, "Judges": 21, "Ruth": 4, "1 Samuel": 31, "2 Samuel": 24,
+            "1 Kings": 22, "2 Kings": 25, "1 Chronicles": 29, "2 Chronicles": 36, "Ezra": 10,
+            "Nehemiah": 13, "Esther": 10, "Job": 42, "Psalms": 150, "Proverbs": 31,
+            "Ecclesiastes": 12, "Song of Solomon": 8, "Isaiah": 66, "Jeremiah": 52, "Lamentations": 5,
+            "Ezekiel": 48, "Daniel": 12, "Hosea": 14, "Joel": 3, "Amos": 9,
+            "Obadiah": 1, "Jonah": 4, "Micah": 7, "Nahum": 3, "Habakkuk": 3,
+            "Zephaniah": 3, "Haggai": 2, "Zechariah": 14, "Malachi": 4,
+            "Matthew": 28, "Mark": 16, "Luke": 24, "John": 21, "Acts": 28,
+            "Romans": 16, "1 Corinthians": 16, "2 Corinthians": 13, "Galatians": 6, "Ephesians": 6,
+            "Philippians": 4, "Colossians": 4, "1 Thessalonians": 5, "2 Thessalonians": 3, "1 Timothy": 6,
+            "2 Timothy": 4, "Titus": 3, "Philemon": 1, "Hebrews": 13, "James": 5,
+            "1 Peter": 5, "2 Peter": 3, "1 John": 5, "2 John": 1, "3 John": 1,
+            "Jude": 1, "Revelation": 22
+        };
 
-            // Interface Cache Selectors
-            const viewer = document.getElementById("bible-viewer");
-            const currentTitle = document.getElementById("current-title");
-            const prevBtn = document.getElementById("prev-chap");
-            const nextBtn = document.getElementById("next-chap");
+        const bookSelect = document.getElementById('book-select');
+        const chapterSelect = document.getElementById('chapter-select');
+        const bibleContent = document.getElementById('bible-content');
+        const drawer = document.getElementById('drawer');
+        const strongContent = document.getElementById('strong-content');
+
+        // Load files locally
+        async function loadData() {
+            try {
+                const [bibleRes, strongsRes] = await Promise.all([
+                    fetch('kjv.json'),
+                    fetch('kjv_strongs.json')
+                ]);
+                
+                bibleData = await bibleRes.json();
+                strongsData = await strongsRes.json();
+                
+                populateBooks();
+                updateChapters();
+            } catch (err) {
+                bibleContent.innerHTML = `
+                    <div class="error">
+                        <strong>Offline Load Error</strong><br><br>
+                        Could not load local files.<br>
+                        Ensure 'kjv.json' and 'kjv_strongs.json' match your directory.
+                    </div>`;
+            }
+        }
+
+        function populateBooks() {
+            bookSelect.innerHTML = Object.keys(bookChapters).map(book => 
+                `<option value="${book}">${book}</option>`
+            ).join('');
+        }
+
+        function updateChapters() {
+            const selectedBook = bookSelect.value;
+            const chaptersCount = bookChapters[selectedBook] || 1;
+            let options = '';
+            for (let i = 1; i <= chaptersCount; i++) {
+                options += `<option value="${i}">Chapter ${i}</option>`;
+            }
+            chapterSelect.innerHTML = options;
+            renderChapter();
+        }
+
+        function renderChapter() {
+            const book = bookSelect.value;
+            const chapter = chapterSelect.value;
             
-            const searchModal = document.getElementById("search-modal");
-            const searchTrigger = document.getElementById("search-trigger");
-            const closeSearch = document.getElementById("close-search");
-            const searchInput = document.getElementById("search-input");
-            const searchResults = document.getElementById("search-results");
+            if (!bibleData) return;
 
-            const pickerModal = document.getElementById("picker-modal");
-            const pickerTrigger = document.getElementById("picker-trigger");
-            const bookSelect = document.getElementById("book-select");
-            const chapterSelect = document.getElementById("chapter-select");
-            const applyPicker = document.getElementById("apply-picker");
+            // Safely get verses based on dynamic book keys
+            const verses = bibleData[book]?.[chapter] || [];
+            
+            if (verses.length === 0) {
+                bibleContent.innerHTML = `<div class="loading">No verse text found for ${book} ${chapter}. Check your JSON keys matches exactly.</div>`;
+                return;
+            }
 
-// REPLACE THE OLD loadBibleJSON FUNCTION WITH THIS DIAGNOSTIC VERSION:
-async function loadBibleJSON() {
-    try {
-        const response = await fetch('kjv.json'); // Double check if this needs to be 'KJV.json'
-        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-        
-        let data = await response.json();
-        
-        if (data && data.books) data = data.books;
-        if (data && data.bible) data = data.bible;
+            bibleContent.innerHTML = verses.map((verseText, index) => {
+                let formattedText = verseText;
 
-        rawBibleData = data;
-        bookKeys = Object.keys(rawBibleData);
+                // Strong's matching fallback helper 
+                // Parses numbers matching formats like {H1234} or {G5678}
+                if (strongsData) {
+                    formattedText = verseText.replace(/\{([HG]\d+)\}/g, (match, strongNum) => {
+                        return `<span class="strong-number" onclick="openStrong('${strongNum}')">[${strongNum}]</span>`;
+                    });
+                }
 
-        initSelectors();
-        renderChapter();
-        loadBibleJSON();
-    } catch (error) {
-        console.error(error);
-        // This will print the exact issue directly onto your dark blue canvas area
-        viewer.innerHTML = `
-            <div class="text-center" style="padding:40px 20px; color:#F87171; font-family:sans-serif; line-height:1.5;">
-                <p style="font-weight:bold; font-size:1.2rem; margin-bottom:12px;">⚠️ Connection Error</p>
-                <p style="color:var(--text-muted); font-size:0.95rem;">${error.message}</p>
-                <p style="font-size:0.85rem; margin-top:16px; background:#1E293B; padding:10px; border-radius:6px; color:#A7F3D0;">
-                    Tip: Verify your file name casing matches exactly on GitHub/Vercel.
-                </p>
-            </div>
-        `;
-        currentTitle.textContent = "Error";
-    }
-}
+                return `
+                    <div class="verse-container">
+                        <div class="verse-header">
+                            <span>${book} ${chapter}:${index + 1}</span>
+                        </div>
+                        <div class="verse-text">${formattedText}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Auto scroll to top of chapter when changed
+            bibleContent.scrollTop = 0;
+        }
 
-// Initialize system
-initSelectors();
-renderChapter();
-} catch (error) {
-console.error(error);
-viewer.innerHTML = <div class="text-center" style="padding-top:40px; color:red;"> Error loading kjv.json.<br>Verify file is in the same folder and casing is correct. </div>;
-}
-}
-function getSortedChapters(bookName) {
-return Object.keys(rawBibleData[bookName]).sort((a, b) => parseInt(a) - parseInt(b));
-}
-function getSortedVerses(bookName, chapterKey) {
-return Object.keys(rawBibleData[bookName][chapterKey]).sort((a, b) => parseInt(a) - parseInt(b));
-}
-// 1. Text Rendering Framework
-function renderChapter() {
-if (!rawBibleData) return;
-const bookName = bookKeys[currentBookIdx];
-const chaptersList = getSortedChapters(bookName);
-const targetChapterKey = chaptersList[currentChapterIdx];
-currentTitle.textContent = `${bookName} ${targetChapterKey}`;
-pickerTrigger.textContent = ${bookName} ${targetChapterKey};
-const chapterObject = rawBibleData[bookName][targetChapterKey];
-const versesList = getSortedVerses(bookName, targetChapterKey);
-let htmlOutput = "";
-for (let i = 0; i < versesList.length; i++) {
-const verseNum = versesList[i];
-const verseText = chapterObject[verseNum];
-htmlOutput += `<div class="verse-row">
-    <span class="verse-num">${verseNum}</span>${verseText}
-</div>`;
-}
-viewer.innerHTML = `
-<div class="text-center" style="padding-top:40px; color:red;">
-Error loading kjv.json.<br>
-Verify file is in the same folder and casing is correct.
-</div>`;
-}
-// 2. Navigation Control Pipeline
-function navigate(direction) {
-if (!rawBibleData) return;
-const bookName = bookKeys[currentBookIdx];
-const chaptersList = getSortedChapters(bookName);
-if (direction === 1) {
-if (currentChapterIdx < chaptersList.length - 1) {
-currentChapterIdx++;
-} else if (currentBookIdx < bookKeys.length - 1) {
-currentBookIdx++;
-currentChapterIdx = 0;
-}
-} else {
-if (currentChapterIdx > 0) {
-currentChapterIdx--;
-} else if (currentBookIdx > 0) {
-currentBookIdx--;
-const prevBookName = bookKeys[currentBookIdx];
-currentChapterIdx = getSortedChapters(prevBookName).length - 1;
-}
-}
-renderChapter();
-}
-// 3. Optimized Offline Content Search Algorithm
-function runSearch(query) {
-searchResults.innerHTML = "";
-const cleanQuery = query.toLowerCase().trim();
-if (cleanQuery.length < 2) return;
-let matches = 0;
-const fragment = document.createDocumentFragment();
-for (let b = 0; b < bookKeys.length; b++) {
-const bName = bookKeys[b];
-const chKeys = Object.keys(rawBibleData[bName]);
-for (let c = 0; c < chKeys.length; c++) {
-const cKey = chKeys[c];
-const vObject = rawBibleData[bName][cKey];
-const vKeys = Object.keys(vObject);
-for (let v = 0; v < vKeys.length; v++) {
-const vKey = vKeys[v];
-const text = vObject[vKey];
-if (text.toLowerCase().includes(cleanQuery)) {
-matches++;
-const row = document.createElement("div");
-row.className = "search-item";
-row.innerHTML = <div class="search-item-title">${bName} ${cKey}:${vKey}</div> <div class="search-item-text">${text}</div>;
-const targetBookIdx = b;
-const targetChList = getSortedChapters(bName);
-const targetChIdx = targetChList.indexOf(cKey);
-row.onclick = () => {
-currentBookIdx = targetBookIdx;
-currentChapterIdx = targetChIdx;
-renderChapter();
-searchModal.classList.add("hidden");
-searchInput.value = "";
-};
-fragment.appendChild(row);
-if (matches >= 80) break;
-}
-}
-if (matches >= 80) break;
-}
-if (matches >= 80) break;
-}
-if (matches === 0) {
-searchResults.innerHTML = <div class="search-item text-center">No matching scriptures found.</div>;
-} else {
-searchResults.appendChild(fragment);
-}
-}
-// 4. Modal Picklists Initializer
-function initSelectors() {
-bookSelect.innerHTML = bookKeys.map((name, i) => <option value="${i}">${name}</option>).join('');
-syncChaptersDropdown();
-bookSelect.addEventListener("change", syncChaptersDropdown);
-}
-function syncChaptersDropdown() {
-const chosenBookName = bookKeys[bookSelect.value];
-const chaptersList = getSortedChapters(chosenBookName);
-chapterSelect.innerHTML = chaptersList.map((chKey, i) => <option value="${i}">Chapter ${chKey}</option>).join('');
-}
-// 5. Native Interface Event Hookups
-prevBtn.addEventListener("click", () => navigate(-1));
-nextBtn.addEventListener("click", () => navigate(1));
-searchTrigger.addEventListener("click", () => {
-searchModal.classList.remove("hidden");
-searchInput.focus();
-});
-closeSearch.addEventListener("click", () => {
-searchModal.classList.add("hidden");
-searchInput.value = "";
-});
-searchInput.addEventListener("input", (e) => runSearch(e.target.value));
-pickerTrigger.addEventListener("click", () => {
-if (!rawBibleData) return;
-bookSelect.value = currentBookIdx;
-syncChaptersDropdown();
-chapterSelect.value = currentChapterIdx;
-pickerModal.classList.remove("hidden");
-});
-applyPicker.addEventListener("click", () => {
-currentBookIdx = parseInt(bookSelect.value);
-currentChapterIdx = parseInt(chapterSelect.value);
-renderChapter();
-pickerModal.classList.add("hidden");
-});
-window.onclick = (e) => {
-if (e.target === searchModal) searchModal.classList.add("hidden");
-if (e.target === pickerModal) pickerModal.classList.add("hidden");
-};
-// Bootstrap Execute Operation
-loadBibleJSON();
-});
+        function openStrong(strongId) {
+            const definition = strongsData[strongId] || "Definition not found in your strongs schema.";
+            strongContent.innerHTML = `<strong>${strongId}</strong>:<br>${definition}`;
+            drawer.style.bottom = "0";
+        }
+
+        function closeDrawer() {
+            drawer.style.bottom = "-100%";
+        }
+
+                // Action Listeners
+        bookSelect.addEventListener('change', () => {
+            updateChapters();
+        });
+        chapterSelect.addEventListener('change', renderChapter);
+
+        // Run
+        loadData();
+    </script>
+</body>
+</html>
 
