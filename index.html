@@ -882,18 +882,45 @@
             }
         };
 
-        // Automatic DB Initial State Probe Pipeline
+// Automatic DB Initial State Probe & Auto-load Pipeline
         window.addEventListener('DOMContentLoaded', async () => {
             try {
+                // 1. Check if we already have a Bible cached in database
                 const cachedData = await loadFromDB();
                 if (cachedData) {
                     bibleData = cachedData;
                     switchPanel('reader');
                     initPresentationEngine();
+                    return;
+                }
+                
+                // 2. If empty, try to auto-load the bundled "kjv.json" from inside the APK
+                const response = await fetch('kjv.json');
+                if (response.ok) {
+                    const parsed = await response.json();
+                    
+                    // Normalize structure if it's a flat format
+                    if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
+                        bibleData = parsed;
+                    } else {
+                        let flatVerses = Array.isArray(parsed) ? parsed : (parsed.verses || []);
+                        if(flatVerses.length > 0) {
+                            bibleData = normalizeLayoutStructure(flatVerses);
+                        } else {
+                            throw new Error("Empty JSON structure");
+                        }
+                    }
+                    
+                    // Save to local IndexedDB database so it loads instantly next time
+                    await saveToDB(bibleData);
+                    switchPanel('reader');
+                    initPresentationEngine();
                 } else {
+                    // Fallback to upload panel if kjv.json isn't bundled
                     switchPanel('upload');
                 }
             } catch (err) {
+                console.log("Could not auto-load bundled KJV, showing manual upload instead.");
                 switchPanel('upload');
             }
         });
