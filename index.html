@@ -4,309 +4,589 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TKH Bible</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.293.0/lucide.min.js"></script>
     <style>
         :root {
-            --bg-dark: #0a192f;
-            --bg-card: #172a45;
-            --text-main: #e6f1ff;
-            --text-muted: #8892b0;
-            --accent: #64ffda;
-            --accent-hover: #00b4d8;
+            --bg-color: #0b132b;
+            --surface-color: #1c2541;
+            --surface-light: #3a506b;
+            --accent-color: #64dfdf;
+            --text-main: #ffffff;
+            --text-muted: #95a5a6;
+            --padding-base: 16px;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--bg-color);
             color: var(--text-main);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
             overflow: hidden;
         }
 
-        /* Top Bar */
+        /* Top Header & Search */
         header {
-            background: rgba(10, 25, 47, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(136, 146, 176, 0.2);
-            padding: 12px 16px;
+            background-color: var(--surface-color);
+            padding: 12px var(--padding-base);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             z-index: 10;
+            height: 60px;
         }
 
-        h1 {
+        .header-title {
             font-size: 1.2rem;
-            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
         }
 
-        .controls {
+        .search-container {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            position: relative;
         }
 
-        select {
-            background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--text-muted);
-            padding: 6px 12px;
-            border-radius: 6px;
+        .search-box {
+            width: 0;
+            opacity: 0;
+            pointer-events: none;
+            background: var(--surface-light);
+            border: none;
             outline: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            max-width: 150px;
+            padding: 8px 0px;
+            border-radius: 20px;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.95rem;
         }
 
-        /* Main Content */
+        .search-container.expanded .search-box {
+            width: 220px;
+            opacity: 1;
+            pointer-events: auto;
+            padding: 8px 40px 8px 15px;
+        }
+
+        .search-btn {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .search-container.expanded .search-btn {
+            position: absolute;
+            right: 5px;
+            color: white;
+        }
+
+        /* Main Content View Container */
         main {
             flex: 1;
             overflow-y: auto;
+            padding: var(--padding-base);
+            padding-bottom: 100px; /* Space for bottom navigation */
+            scroll-behavior: smooth;
+        }
+
+        /* Setup / Upload Screen */
+        .upload-section {
+            background: var(--surface-color);
             padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+            border: 2px dashed var(--surface-light);
         }
 
-        .verse-container {
-            background: var(--bg-card);
-            padding: 16px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border-left: 4px solid transparent;
-            transition: border-color 0.3s ease;
-        }
-
-        .verse-container:hover {
-            border-left-color: var(--accent);
-        }
-
-        .verse-header {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
+        .upload-btn {
+            display: inline-block;
+            background: var(--accent-color);
+            color: var(--bg-color);
+            padding: 10px 20px;
+            border-radius: 8px;
             font-weight: bold;
-            display: flex;
-            justify-content: space-between;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        /* Bible Text Layout */
+        .verse-container {
+            margin-bottom: 18px;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .verse-container.highlight {
+            background: rgba(100, 223, 223, 0.2);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .verse-num {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-right: 6px;
+            vertical-align: super;
         }
 
         .verse-text {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             line-height: 1.6;
         }
 
-        .strong-number {
-            color: var(--accent-hover);
-            font-size: 0.8rem;
-            vertical-align: super;
+        /* Strongs numbers formatting if using kjv_strongs.json */
+        .strongs-num {
+            font-size: 0.75rem;
+            color: #ffaa00;
+            opacity: 0.85;
             margin-left: 2px;
-            cursor: pointer;
+            user-select: none;
         }
 
-        /* Bottom Drawer for Strongs */
-        #drawer {
-            position: fixed;
-            bottom: -100%;
-            left: 0;
-            width: 100%;
-            background: var(--bg-card);
-            padding: 20px;
-            border-top: 1px solid var(--text-muted);
-            transition: bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            max-height: 40vh;
-            overflow-y: auto;
-            z-index: 20;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
-        }
-
-        .drawer-header {
-            display: flex;
-            justify-content: space-between;
+        /* Notes functionality */
+        .note-indicator {
+            display: inline-flex;
             align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.5rem;
+            margin-left: 8px;
+            color: #a29bfe;
             cursor: pointer;
+            font-size: 0.85rem;
         }
 
-        #strong-content {
-            font-size: 1rem;
-            line-height: 1.5;
+        .note-area {
+            width: 100%;
+            background: #111a36;
+            border: 1px solid var(--surface-light);
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+            display: none;
+            resize: vertical;
+        }
+
+        /* Bottom Navigation Toolbar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--surface-color);
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .dropdown-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            background-color: var(--surface-light);
             color: var(--text-main);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            text-align: center;
         }
 
-        /* Fallbacks */
-        .loading, .error {
-            text-align: center;
-            margin-top: 40px;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            padding: 20px;
+        /* Search Results View */
+        .search-results-title {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .search-item {
+            background: var(--surface-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-item:active {
+            transform: scale(0.98);
+        }
+
+        .search-item-header {
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 4px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>TKH Bible</h1>
-        <div class="controls">
-            <select id="book-select"></select>
-            <select id="chapter-select"></select>
+        <div class="header-title" id="appTitle">Holy Bible</div>
+        <div class="search-container" id="searchContainer">
+            <input type="text" class="search-box" id="searchInput" placeholder="Search verses...">
+            <button class="search-btn" id="searchToggleBtn">
+                <i data-lucide="search"></i>
+            </button>
         </div>
     </header>
 
-    <main id="bible-content">
-        <div class="loading">Loading scriptures offline...</div>
+    <main id="mainViewer">
+        <div id="initialSetup" class="upload-section">
+            <h3>Welcome to your Offline Bible</h3>
+            <p style="color: var(--text-muted); margin-top: 8px; font-size:0.9rem;">
+                To enable 100% offline usage, select either <b>kjv.json</b> or <b>kjv_strongs.json</b> from your device. It will save locally forever.
+            </p>
+            <label class="upload-btn">
+                Select Bible JSON File
+                <input type="file" id="bibleDataFile" accept=".json" style="display: none;">
+            </label>
+        </div>
+        <div id="bibleContent"></div>
     </main>
 
-    <div id="drawer">
-        <div class="drawer-header">
-            <h3>Strong's Definition</h3>
-            <button class="close-btn" onclick="closeDrawer()">×</button>
+    <div class="bottom-nav">
+        <div class="dropdown-wrapper">
+            <select id="bookSelect"><option>Book</option></select>
         </div>
-        <div id="strong-content">Click a Strong's number to view details.</div>
+        <div class="dropdown-wrapper">
+            <select id="chapterSelect"><option>Ch</option></select>
+        </div>
+        <div class="dropdown-wrapper">
+            <select id="verseSelect"><option>Vs</option></select>
+        </div>
     </div>
 
     <script>
+        // State variables
         let bibleData = null;
-        let strongsData = null;
+        let isStrongsMode = false;
+        let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
+
+        // DOM elements
+        const searchContainer = document.getElementById('searchContainer');
+        const searchToggleBtn = document.getElementById('searchToggleBtn');
+        const searchInput = document.getElementById('searchInput');
+        const appTitle = document.getElementById('appTitle');
+        const mainViewer = document.getElementById('mainViewer');
+        const bibleContent = document.getElementById('bibleContent');
+        const initialSetup = document.getElementById('initialSetup');
         
-        // Complete 66 Books and Chapter Counts mapping
-        const bookChapters = {
-            "Genesis": 50, "Exodus": 40, "Leviticus": 27, "Numbers": 36, "Deuteronomy": 34,
-            "Joshua": 24, "Judges": 21, "Ruth": 4, "1 Samuel": 31, "2 Samuel": 24,
-            "1 Kings": 22, "2 Kings": 25, "1 Chronicles": 29, "2 Chronicles": 36, "Ezra": 10,
-            "Nehemiah": 13, "Esther": 10, "Job": 42, "Psalms": 150, "Proverbs": 31,
-            "Ecclesiastes": 12, "Song of Solomon": 8, "Isaiah": 66, "Jeremiah": 52, "Lamentations": 5,
-            "Ezekiel": 48, "Daniel": 12, "Hosea": 14, "Joel": 3, "Amos": 9,
-            "Obadiah": 1, "Jonah": 4, "Micah": 7, "Nahum": 3, "Habakkuk": 3,
-            "Zephaniah": 3, "Haggai": 2, "Zechariah": 14, "Malachi": 4,
-            "Matthew": 28, "Mark": 16, "Luke": 24, "John": 21, "Acts": 28,
-            "Romans": 16, "1 Corinthians": 16, "2 Corinthians": 13, "Galatians": 6, "Ephesians": 6,
-            "Philippians": 4, "Colossians": 4, "1 Thessalonians": 5, "2 Thessalonians": 3, "1 Timothy": 6,
-            "2 Timothy": 4, "Titus": 3, "Philemon": 1, "Hebrews": 13, "James": 5,
-            "1 Peter": 5, "2 Peter": 3, "1 John": 5, "2 John": 1, "3 John": 1,
-            "Jude": 1, "Revelation": 22
-        };
+        const bookSelect = document.getElementById('bookSelect');
+        const chapterSelect = document.getElementById('chapterSelect');
+        const verseSelect = document.getElementById('verseSelect');
 
-        const bookSelect = document.getElementById('book-select');
-        const chapterSelect = document.getElementById('chapter-select');
-        const bibleContent = document.getElementById('bible-content');
-        const drawer = document.getElementById('drawer');
-        const strongContent = document.getElementById('strong-content');
+        // Initialize App Icons
+        lucide.createIcons();
 
-        // Load files locally
-        async function loadData() {
-            try {
-                const [bibleRes, strongsRes] = await Promise.all([
-                    fetch('kjv.json'),
-                    fetch('kjv_strongs.json')
-                ]);
-                
-                bibleData = await bibleRes.json();
-                strongsData = await strongsRes.json();
-                
-                populateBooks();
-                updateChapters();
-            } catch (err) {
-                bibleContent.innerHTML = `
-                    <div class="error">
-                        <strong>Offline Load Error</strong><br><br>
-                        Could not load local files.<br>
-                        Ensure 'kjv.json' and 'kjv_strongs.json' match your directory.
-                    </div>`;
+        // 1. Expandable Search Box Interaction
+        searchToggleBtn.addEventListener('click', () => {
+            if (!bibleData) return;
+            
+            if (!searchContainer.classList.contains('expanded')) {
+                searchContainer.classList.add('expanded');
+                appTitle.style.opacity = '0';
+                searchInput.focus();
+                searchToggleBtn.innerHTML = '<i data-lucide="x"></i>';
+            } else {
+                if (searchInput.value.trim() !== "") {
+                    executeSearch(searchInput.value.trim());
+                } else {
+                    closeSearch();
+                }
             }
+            lucide.createIcons();
+        });
+
+        function closeSearch() {
+            searchContainer.classList.remove('expanded');
+            appTitle.style.opacity = '1';
+            searchInput.value = '';
+            searchToggleBtn.innerHTML = '<i data-lucide="search"></i>';
+            lucide.createIcons();
+            renderCurrentChapter();
+        }
+
+        // Close search via text input listeners
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                executeSearch(searchInput.value.trim());
+            }
+        });
+
+        // 2. Local File Parsing & Persistence
+        document.getElementById('bibleDataFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    
+                    // Normalize standard structure vs Strongs JSON structure
+                    if (Array.isArray(parsed)) {
+                        bibleData = parsed; // Standard structure
+                        isStrongsMode = false;
+                    } else if (parsed.metadata || parsed[0]?.book_name) {
+                        // Strongs format processing (flat verse listing or nested array conversion)
+                        bibleData = convertStrongsToStandard(parsed);
+                        isStrongsMode = true;
+                    }
+
+                    localStorage.setItem('cached_bible_data', JSON.stringify(bibleData));
+                    localStorage.setItem('bible_mode_strongs', isStrongsMode);
+                    initBibleView();
+                } catch (err) {
+                    alert("Error processing file. Please ensure it matches your Bible JSON file.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Convert Flat structure format into interactive Book->Chapter->Verse hierarchy
+        function convertStrongsToStandard(data) {
+            let versesArray = Array.isArray(data) ? data : data.verses || [];
+            if (!Array.isArray(versesArray) && data.module) {
+                // Alternately check object signatures
+                versesArray = Object.values(data).filter(v => v.book_name);
+            }
+            
+            let structured = [];
+            let bookMap = {};
+
+            versesArray.forEach(v => {
+                if (!bookMap[v.book_name]) {
+                    bookMap[v.book_name] = { name: v.book_name, chapters: [] };
+                    structured.push(bookMap[v.book_name]);
+                }
+                let chIdx = v.chapter - 1;
+                if (!bookMap[v.book_name].chapters[chIdx]) {
+                    bookMap[v.book_name].chapters[chIdx] = [];
+                }
+                bookMap[v.book_name].chapters[chIdx].push(v.text);
+            });
+            return structured;
+        }
+
+        // 3. UI Navigation Logic
+        function initBibleView() {
+            initialSetup.style.display = 'none';
+            populateBooks();
+            
+            // Default to Genesis 1
+            bookSelect.selectedIndex = 0;
+            updateChapters();
         }
 
         function populateBooks() {
-            bookSelect.innerHTML = Object.keys(bookChapters).map(book => 
-                `<option value="${book}">${book}</option>`
-            ).join('');
+            bookSelect.innerHTML = '';
+            bibleData.forEach((book, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = book.name;
+                bookSelect.appendChild(opt);
+            });
         }
 
         function updateChapters() {
-            const selectedBook = bookSelect.value;
-            const chaptersCount = bookChapters[selectedBook] || 1;
-            let options = '';
-            for (let i = 1; i <= chaptersCount; i++) {
-                options += `<option value="${i}">Chapter ${i}</option>`;
-            }
-            chapterSelect.innerHTML = options;
-            renderChapter();
+            const bookIdx = bookSelect.value;
+            const chapters = bibleData[bookIdx].chapters;
+            
+            chapterSelect.innerHTML = '';
+            chapters.forEach((_, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `Ch ${idx + 1}`;
+                chapterSelect.appendChild(opt);
+            });
+            updateVerses();
         }
 
-        function renderChapter() {
-            const book = bookSelect.value;
-            const chapter = chapterSelect.value;
+        function updateVerses() {
+            const bookIdx = bookSelect.value;
+            const chIdx = chapterSelect.value;
+            const verses = bibleData[bookIdx].chapters[chIdx] || [];
             
+            verseSelect.innerHTML = '';
+            verses.forEach((_, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `Vs ${idx + 1}`;
+                verseSelect.appendChild(opt);
+            });
+            renderCurrentChapter();
+        }
+
+        bookSelect.addEventListener('change', updateChapters);
+        chapterSelect.addEventListener('change', updateVerses);
+        verseSelect.addEventListener('change', () => {
+            const verseIdx = verseSelect.value;
+            scrollToVerse(verseIdx);
+        });
+
+        // 4. Content Rendering
+        function renderCurrentChapter() {
             if (!bibleData) return;
+            const bookIdx = bookSelect.value;
+            const chIdx = chapterSelect.value;
+            const bookName = bibleData[bookIdx].name;
+            const verses = bibleData[bookIdx].chapters[chIdx] || [];
 
-            // Safely get verses based on dynamic book keys
-            const verses = bibleData[book]?.[chapter] || [];
-            
-            if (verses.length === 0) {
-                bibleContent.innerHTML = `<div class="loading">No verse text found for ${book} ${chapter}. Check your JSON keys matches exactly.</div>`;
-                return;
-            }
+            appTitle.textContent = `${bookName} ${parseInt(chIdx) + 1}`;
 
-            bibleContent.innerHTML = verses.map((verseText, index) => {
-                let formattedText = verseText;
+            let html = '';
+            verses.forEach((text, idx) => {
+                const verseNum = idx + 1;
+                const noteKey = `${bookName}_${chIdx}_${verseNum}`;
+                const hasNote = notes[noteKey] ? 'inline-flex' : 'none';
+                const savedNoteText = notes[noteKey] || '';
+                
+                // Clean Strongs tags dynamically if rendering Strongs files visually clear
+                let processedText = text.replace(/\{G\d+\}/g, (match) => {
+                    return `<span class="strongs-num">${match.replace(/[{}]/g, '')}</span>`;
+                });
 
-                // Strong's matching fallback helper 
-                // Parses numbers matching formats like {H1234} or {G5678}
-                if (strongsData) {
-                    formattedText = verseText.replace(/\{([HG]\d+)\}/g, (match, strongNum) => {
-                        return `<span class="strong-number" onclick="openStrong('${strongNum}')">[${strongNum}]</span>`;
-                    });
-                }
-
-                return `
-                    <div class="verse-container">
-                        <div class="verse-header">
-                            <span>${book} ${chapter}:${index + 1}</span>
-                        </div>
-                        <div class="verse-text">${formattedText}</div>
+                html += `
+                    <div class="verse-container" id="v_${idx}">
+                        <span class="verse-num">${verseNum}</span>
+                        <span class="verse-text" onclick="toggleNoteArea('${noteKey}', ${idx})">${processedText}</span>
+                        <span class="note-indicator" id="ind_${noteKey}" style="display: ${hasNote}" onclick="toggleNoteArea('${noteKey}', ${idx})">
+                            <i data-lucide="sticky-note" style="width:14px; height:14px; margin-right:2px;"></i> note
+                        </span>
+                        <textarea class="note-area" id="note_${noteKey}" placeholder="Write a note for this verse..." oninput="saveNote('${noteKey}', this.value)">${savedNoteText}</textarea>
                     </div>
                 `;
-            }).join('');
+            });
+
+            bibleContent.innerHTML = html;
+            lucide.createIcons();
+            mainViewer.scrollTop = 0;
+        }
+
+        function scrollToVerse(verseIdx) {
+            const target = document.getElementById(`v_${verseIdx}`);
+            if (target) {
+                // Clear previous highlights
+                document.querySelectorAll('.verse-container').forEach(el => el.classList.remove('highlight'));
+                
+                // Set interactive focus smooth scroll
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.classList.add('highlight');
+            }
+        }
+
+        // 5. Notes Engine
+        window.toggleNoteArea = function(noteKey, idx) {
+            const el = document.getElementById(`note_${noteKey}`);
+            if (el.style.display === 'block') {
+                el.style.display = 'none';
+            } else {
+                el.style.display = 'block';
+                el.focus();
+            }
+        };
+
+        window.saveNote = function(noteKey, value) {
+            if (value.trim() === "") {
+                delete notes[noteKey];
+                document.getElementById(`ind_${noteKey}`).style.display = 'none';
+            } else {
+                notes[noteKey] = value;
+                document.getElementById(`ind_${noteKey}`).style.display = 'inline-flex';
+            }
+            localStorage.setItem('bible_notes', JSON.stringify(notes));
+        };
+
+        // 6. Global Search Implementation
+        function executeSearch(query) {
+            if (!query) return;
+            query = query.toLowerCase();
             
-            // Auto scroll to top of chapter when changed
-            bibleContent.scrollTop = 0;
+            bibleContent.innerHTML = `<h3 class="search-results-title">Search Results for "${query}":</h3>`;
+            let resultsCount = 0;
+
+            bibleData.forEach((book, bIdx) => {
+                book.chapters.forEach((chapter, cIdx) => {
+                    chapter.forEach((verseText, vIdx) => {
+                        if (verseText.toLowerCase().includes(query)) {
+                            resultsCount++;
+                            let item = document.createElement('div');
+                            item.className = 'search-item';
+                            item.innerHTML = `
+                                <div class="search-item-header">${book.name} ${cIdx + 1}:${vIdx + 1}</div>
+                                <div style="font-size:0.95rem; line-height:1.4;">${verseText.replace(/\{G\d+\}/g, '')}</div>
+                            `;
+                            
+                            // Direct click redirection event to exact verse
+                            item.addEventListener('click', () => {
+                                bookSelect.value = bIdx;
+                                updateChapters();
+                                chapterSelect.value = cIdx;
+                                updateVerses();
+                                
+                                // Close Search window seamlessly and scroll
+                                searchContainer.classList.remove('expanded');
+                                appTitle.style.opacity = '1';
+                                searchInput.value = '';
+                                searchToggleBtn.innerHTML = '<i data-lucide="search"></i>';
+                                lucide.createIcons();
+
+                                setTimeout(() => {
+                                    scrollToVerse(vIdx);
+                                }, 200);
+                            });
+                            
+                            bibleContent.appendChild(item);
+                        }
+                    });
+                });
+            });
+
+            if (resultsCount === 0) {
+                bibleContent.innerHTML += `<p style="color: var(--text-muted);">No occurrences found.</p>`;
+            }
+            mainViewer.scrollTop = 0;
         }
 
-        function openStrong(strongId) {
-            const definition = strongsData[strongId] || "Definition not found in your strongs schema.";
-            strongContent.innerHTML = `<strong>${strongId}</strong>:<br>${definition}`;
-            drawer.style.bottom = "0";
-        }
-
-        function closeDrawer() {
-            drawer.style.bottom = "-100%";
-        }
-
-                // Action Listeners
-        bookSelect.addEventListener('change', () => {
-            updateChapters();
+        // On initialization check database cache existence
+        window.addEventListener('DOMContentLoaded', () => {
+            const cached = localStorage.getItem('cached_bible_data');
+            if (cached) {
+                bibleData = JSON.parse(cached);
+                isStrongsMode = localStorage.getItem('bible_mode_strongs') === 'true';
+                initBibleView();
+            }
         });
-        chapterSelect.addEventListener('change', renderChapter);
-
-        // Run
-        loadData();
     </script>
 </body>
 </html>
-
