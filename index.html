@@ -329,6 +329,7 @@ async function loadBibleJSON() {
 
         initSelectors();
         renderChapter();
+        loadBibleJSON();
     } catch (error) {
         console.error(error);
         // This will print the exact issue directly onto your dark blue canvas area
@@ -365,7 +366,7 @@ if (!rawBibleData) return;
 const bookName = bookKeys[currentBookIdx];
 const chaptersList = getSortedChapters(bookName);
 const targetChapterKey = chaptersList[currentChapterIdx];
-currentTitle.textContent = ${bookName} ${targetChapterKey};
+currentTitle.textContent = `${bookName} ${targetChapterKey}`;
 pickerTrigger.textContent = ${bookName} ${targetChapterKey};
 const chapterObject = rawBibleData[bookName][targetChapterKey];
 const versesList = getSortedVerses(bookName, targetChapterKey);
@@ -373,10 +374,15 @@ let htmlOutput = "";
 for (let i = 0; i < versesList.length; i++) {
 const verseNum = versesList[i];
 const verseText = chapterObject[verseNum];
-htmlOutput += <div class="verse-row"> <span class="verse-num">${verseNum}</span>${verseText} </div>;
+htmlOutput += `<div class="verse-row">
+    <span class="verse-num">${verseNum}</span>${verseText}
+</div>`;
 }
-viewer.innerHTML = htmlOutput;
-document.querySelector('.reading-container').scrollTop = 0;
+viewer.innerHTML = `
+<div class="text-center" style="padding-top:40px; color:red;">
+Error loading kjv.json.<br>
+Verify file is in the same folder and casing is correct.
+</div>`;
 }
 // 2. Navigation Control Pipeline
 function navigate(direction) {
