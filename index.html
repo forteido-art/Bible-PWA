@@ -69,7 +69,7 @@
             gap: 12px;
         }
 
-        /* Green Donate Button[cite: 1] */
+        /* Green Donate Button */
         .btn-donate {
             background-color: var(--green-donate);
             color: #000;
@@ -182,6 +182,35 @@
             margin-right: 10px;
             display: inline-block;
             width: 20px;
+            text-align: center;
+            cursor: copy;
+            border-radius: 4px;
+        }
+        .verse-num:active {
+            background-color: var(--md-secondary-container);
+        }
+
+        /* Toast Notifications style */
+        .toast-notification {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--md-surface-variant);
+            color: var(--md-text-main);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
 
         /* Highlights Styles */
@@ -196,7 +225,7 @@
             border-left: 4px solid var(--md-primary);
         }
 
-        /* Modern Android Options Context Menu[cite: 1] */
+        /* Modern Android Options Context Menu */
         .context-menu {
             position: fixed;
             bottom: 90px; left: 16px; right: 16px;
@@ -344,6 +373,62 @@
             padding: 8px 16px; border-radius: 20px; font-weight: bold;
             cursor: pointer;
         }
+        
+        /* Dedicated How To Use Row Styles */
+        .btn-how-to-row {
+            background-color: var(--md-surface-variant);
+            color: var(--md-primary);
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+            cursor: pointer;
+            margin-top: 12px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: opacity 0.2s;
+        }
+        .btn-how-to-row:active {
+            opacity: 0.8;
+        }
+        .how-to-link {
+            color: var(--md-primary);
+            text-decoration: underline;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        /* Guide / How to use View Panel */
+        #howToPanel {
+            overflow-y: auto;
+            max-height: 100%;
+        }
+        .guide-container {
+            line-height: 1.6;
+            padding-bottom: 40px; /* Safe padding for bottom of scrollable instructions */
+        }
+        .guide-container h4 {
+            color: var(--md-primary);
+            margin-top: 16px;
+            margin-bottom: 6px;
+            font-size: 16px;
+        }
+        .guide-container p, .guide-container ul {
+            font-size: 14px;
+            color: var(--md-text-muted);
+            margin-bottom: 12px;
+        }
+        .guide-container ul {
+            padding-left: 20px;
+        }
 
         /* Bottom Nav Tab Bar with slide transition */
         .bottom-nav {
@@ -374,7 +459,7 @@
 
     <header id="appHeader">
         <div class="header-left">
-            <!-- Green Donate Button[cite: 1] -->
+            <!-- Green Donate Button -->
             <a href="https://paystack.shop/pay/season-of-mercy" target="_blank" class="btn-donate" id="btnDonate">
                 <i data-lucide="heart" style="width: 14px; height: 14px;"></i> Donate
             </a>
@@ -414,6 +499,14 @@
 
         <div id="settingsPanel" class="view-panel">
             <h3 style="margin-bottom: 8px; font-weight: 400;">Translation Parameters</h3>
+            
+            <!-- How to Use Bar -->
+            <button class="btn-how-to-row" id="btnHowToUse">
+                <span>How to Use App Functions</span>
+                <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
+            </button>
+
+            <!-- Reset Database Bar -->
             <div class="settings-row">
                 <div>
                     <p style="font-weight: 500;">Active Module Database</p>
@@ -422,9 +515,34 @@
                 <button class="btn-danger" id="btnClearData">Clear Database</button>
             </div>
         </div>
+
+        <!-- How To Use Panel (Now scrollable within Main) -->
+        <div id="howToPanel" class="view-panel">
+            <button class="how-to-link" id="btnBackToSettings" style="margin-bottom: 16px; display: inline-flex; align-items: center; gap: 4px;">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to Settings
+            </button>
+            <div class="guide-container">
+                <h3 style="margin-bottom: 12px;">App Instructions</h3>
+                <hr style="border: 0; border-top: 1px solid var(--md-surface-variant); margin-bottom: 16px;">
+                
+                <h4>📖 Quick Verse Copy</h4>
+                <p>Simply tap directly on any <strong>verse number</strong> to copy its contents alongside the Book, Chapter, and Verse reference to your clipboard instantly.</p>
+
+                <h4>💡 Long Press Menu Features</h4>
+                <p>Press and hold on the body text of any verse to reveal advanced contextual actions:</p>
+                <ul>
+                    <li><strong>Highlight text</strong>: Cycle through colorful background highlight markers.</li>
+                    <li><strong>Add / Edit Notes</strong>: Open an automatic draft notepad drawer to link local reflections. Tapping a verse that has a note icon on it will instantly view your note.</li>
+                    <li><strong>Search Dictionary</strong>: Link the verse to external language studies via external references.</li>
+                </ul>
+
+                <h4>🔍 Global Index Search</h4>
+                <p>Toggle the Search icon in your navigation deck to query matching occurrences instantly across the entire Bible library.</p>
+            </div>
+        </div>
     </main>
 
-    <!-- Context Options Menu for long press interactions[cite: 1] -->
+    <!-- Context Options Menu for long press interactions -->
     <div class="context-menu" id="optionsMenu">
         <button class="context-option" data-action="add-note">
             <i data-lucide="sticky-note" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
@@ -461,6 +579,9 @@
             <textarea id="notepadTextarea" placeholder="Type your note here... (autosaves)"></textarea>
         </div>
     </div>
+
+    <!-- Toast elements -->
+    <div id="toastNotification" class="toast-notification">Copied to clipboard</div>
 
     <nav class="bottom-nav" id="bottomNav">
         <button class="nav-item active" id="tabRead">
@@ -504,6 +625,9 @@
         const editNotepadBtn = document.getElementById('editNotepadBtn');
         let activeNoteKey = null;
 
+        // Toast element reference
+        const toastNotification = document.getElementById('toastNotification');
+
         // Auto-hide navigation handling variables
         let lastScrollTop = 0;
         let barsHidden = false;
@@ -529,7 +653,8 @@
                 e.target.closest('.md-select') || 
                 e.target.closest('.context-menu') || 
                 e.target.closest('.bottom-nav') ||
-                e.target.closest('.btn-donate')) {
+                e.target.closest('.btn-donate') ||
+                e.target.closest('.verse-num')) {
                 return;
             }
             
@@ -648,6 +773,14 @@
             renderChapterView();
         }
 
+        function showToast(message) {
+            toastNotification.textContent = message;
+            toastNotification.classList.add('show');
+            setTimeout(() => {
+                toastNotification.classList.remove('show');
+            }, 2500);
+        }
+
         function renderChapterView() {
             const bIdx = bookSelect.value;
             const cIdx = chapterSelect.value;
@@ -668,14 +801,32 @@
                 div.className = `verse-layout ${highlightClass} ${noteClass}`.trim().replace(/\s+/g, ' ');
                 
                 div.id = `v_pos_${i}`;
-                div.innerHTML = `<span class="verse-num">${vNum}</span>${cleanText}`;
+                div.innerHTML = `<span class="verse-num" data-vkey="${key}">${vNum}</span>${cleanText}`;
                 
-                // Track mouse/touch variables for precise "long press" events[cite: 1]
+                // Click listener on verse number for copying
+                const vNumSpan = div.querySelector('.verse-num');
+                vNumSpan.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Avoid triggering highlight context or scroll hides
+                    
+                    const bookName = bibleData[bIdx].name;
+                    const chNum = parseInt(cIdx) + 1;
+                    const formattedString = `${bookName} ${chNum}:${vNum} - ${cleanText}`;
+                    
+                    navigator.clipboard.writeText(formattedString).then(() => {
+                        showToast(`Copied ${bookName} ${chNum}:${vNum}`);
+                    }).catch(err => {
+                        console.error('Clipboard copy failed: ', err);
+                    });
+                });
+
+                // Track mouse/touch variables for precise "long press" events
                 let pressTimer;
                 let isLongPress = false;
                 const longPressDuration = 500; // Duration limit in milliseconds
 
                 const startPress = (e) => {
+                    // Do not initiate long press action if clicking specifically on the verse number copy button
+                    if (e.target.classList.contains('verse-num')) return;
                     isLongPress = false;
                     pressTimer = setTimeout(() => {
                         isLongPress = true;
@@ -689,6 +840,7 @@
                 };
 
                 const handleTap = (e) => {
+                    if (e.target.classList.contains('verse-num')) return;
                     clearTimeout(pressTimer);
                     // If options menu is active or context items are visible, ignore normal tap actions
                     if (optionsMenu.classList.contains('show')) return;
@@ -725,7 +877,7 @@
             });
         }
 
-        // Options Menu Handlers[cite: 1]
+        // Options Menu Handlers
         function showOptionsMenu() {
             optionsMenu.classList.add('show');
         }
@@ -735,7 +887,7 @@
             selectedVerseKey = null;
         }
 
-        // Configure Option Menu selection buttons[cite: 1]
+        // Configure Option Menu selection buttons
         document.querySelectorAll('.context-option').forEach(opt => {
             opt.onclick = (e) => {
                 e.stopPropagation();
@@ -856,7 +1008,7 @@
             el.className = `verse-layout ${highlightClass} ${noteClass}`.trim().replace(/\s+/g, ' ');
         }
 
-        // Interface Switcher (Reader, Search, Settings)
+        // Interface Switcher (Reader, Search, Settings, Help Guide)
         function switchPanel(panelId) {
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -888,6 +1040,12 @@
                 headerDropdowns.style.display = "none";
                 appTitle.style.display = "block";
                 appTitle.textContent = "Settings";
+            } else if (panelId === 'guide') {
+                document.getElementById('howToPanel').classList.add('active');
+                document.getElementById('tabSettings').classList.add('active');
+                headerDropdowns.style.display = "none";
+                appTitle.style.display = "block";
+                appTitle.textContent = "Guide";
             }
         }
 
@@ -895,6 +1053,10 @@
         document.getElementById('tabRead').onclick = () => switchPanel('reader');
         document.getElementById('tabSearch').onclick = () => switchPanel('search');
         document.getElementById('tabSettings').onclick = () => switchPanel('settings');
+
+        // Help Link Actions
+        document.getElementById('btnHowToUse').onclick = () => switchPanel('guide');
+        document.getElementById('btnBackToSettings').onclick = () => switchPanel('settings');
 
         // Text Search Module Implementation
         searchInput.oninput = () => {
@@ -964,6 +1126,10 @@
 
         // Automatic DB Initial State Probe & Auto-load Pipeline
         window.addEventListener('DOMContentLoaded', async () => {
+            // Apply lucide icons dynamically
+            if(typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
             try {
                 // 1. Check if we already have a Bible cached in database
                 const cachedData = await loadFromDB();
