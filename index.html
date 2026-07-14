@@ -375,7 +375,7 @@
         .search-box {
             background-color: var(--md-surface-variant);
             border-radius: 28px;
-            padding: 6px 16px;
+            padding: 6px 6px 6px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -385,6 +385,21 @@
         .search-box input {
             background: none; border: none; outline: none;
             color: var(--md-text-main); font-size: 16px; flex: 1;
+        }
+
+        .btn-search {
+            background-color: var(--md-primary);
+            color: var(--md-on-primary);
+            border: none;
+            border-radius: 22px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-search:active {
+            opacity: 0.8;
         }
 
         .search-result-item {
@@ -495,7 +510,6 @@
 
     <header id="appHeader">
         <div class="header-left">
-            <!-- Green Donate Button -->
             <a href="https://paystack.shop/pay/season-of-mercy" target="_blank" class="btn-donate" id="btnDonate">
                 <i data-lucide="heart" style="width: 14px; height: 14px;"></i> Donate
             </a>
@@ -529,6 +543,7 @@
             <div class="search-box">
                 <i data-lucide="search" style="color: var(--md-text-muted);"></i>
                 <input type="text" id="searchInput" placeholder="Search keywords or phrases...">
+                <button id="btnSearchExecute" class="btn-search">Search</button>
             </div>
             <div id="searchResults"></div>
         </div>
@@ -536,13 +551,11 @@
         <div id="settingsPanel" class="view-panel">
             <h3 style="margin-bottom: 8px; font-weight: 400;">Translation Parameters</h3>
             
-            <!-- How to Use Bar -->
             <button class="btn-how-to-row" id="btnHowToUse">
                 <span>How to Use App Functions</span>
                 <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
             </button>
 
-            <!-- Reset Database Bar -->
             <div class="settings-row">
                 <div>
                     <p style="font-weight: 500;">Active Module Database</p>
@@ -552,7 +565,6 @@
             </div>
         </div>
 
-        <!-- How To Use Panel (Now scrollable within Main) -->
         <div id="howToPanel" class="view-panel">
             <button class="how-to-link" id="btnBackToSettings" style="margin-bottom: 16px; display: inline-flex; align-items: center; gap: 4px;">
                 <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to Settings
@@ -580,7 +592,6 @@
         </div>
     </main>
 
-    <!-- Context Options Menu for long press interactions -->
     <div class="context-menu" id="optionsMenu">
         <button class="context-option" data-action="multi-copy">
             <i data-lucide="copy" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
@@ -608,7 +619,6 @@
         </button>
     </div>
 
-    <!-- Multi-verse Selection Bottom Action Bar -->
     <div class="multi-select-bar" id="multiSelectBar">
         <button id="cancelMultiSelectBtn" class="md-btn-fab" style="margin-top: 0; background-color: var(--md-surface-variant); color: var(--md-text-main);">
             Cancel
@@ -619,7 +629,6 @@
         </button>
     </div>
 
-    <!-- Notepad Drawer Modal -->
     <div id="notepadModal" class="notepad-modal">
         <div class="notepad-content" id="notepadContent">
             <div class="notepad-header">
@@ -637,7 +646,6 @@
         </div>
     </div>
 
-    <!-- Toast elements -->
     <div id="toastNotification" class="toast-notification">Copied to clipboard</div>
 
     <nav class="bottom-nav" id="bottomNav">
@@ -1270,10 +1278,16 @@
         document.getElementById('btnBackToSettings').onclick = () => switchPanel('settings');
 
         // Text Search Module Implementation
-        searchInput.oninput = () => {
+        const btnSearchExecute = document.getElementById('btnSearchExecute');
+
+        function performSearch() {
             const query = searchInput.value.toLowerCase().trim();
             searchResults.innerHTML = "";
-            if (query.length < 3 || !bibleData) return;
+            if (query.length < 3) {
+                showToast("Enter at least 3 characters");
+                return;
+            }
+            if (!bibleData) return;
 
             const resultsFragment = document.createDocumentFragment();
 
@@ -1315,7 +1329,21 @@
                     });
                 });
             });
+
             searchResults.appendChild(resultsFragment);
+
+            if (searchResults.children.length === 0) {
+                showToast("No matches found");
+            }
+        }
+
+        btnSearchExecute.onclick = performSearch;
+        
+        searchInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+                searchInput.blur(); // Dismisses mobile keyboard layout
+            }
         };
 
         // Data Management Workflows
