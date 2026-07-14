@@ -262,10 +262,28 @@
             align-items: center;
             margin-bottom: 16px;
         }
+        .notepad-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         #notepadTitle {
             font-weight: 500;
             font-size: 18px;
             color: var(--md-primary);
+        }
+        .notepad-edit-btn {
+            background-color: var(--md-secondary-container);
+            color: var(--md-on-secondary-container);
+            border: none;
+            border-radius: 12px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .notepad-close-btn {
             background: none;
@@ -428,12 +446,17 @@
 
     <!-- Notepad Drawer Modal -->
     <div id="notepadModal" class="notepad-modal">
-        <div class="notepad-content">
+        <div class="notepad-content" id="notepadContent">
             <div class="notepad-header">
                 <span id="notepadTitle">Note</span>
-                <button id="closeNotepadBtn" class="notepad-close-btn">
-                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
-                </button>
+                <div class="notepad-header-right">
+                    <button id="editNotepadBtn" class="notepad-edit-btn">
+                        <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Edit Note
+                    </button>
+                    <button id="closeNotepadBtn" class="notepad-close-btn">
+                        <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                    </button>
+                </div>
             </div>
             <textarea id="notepadTextarea" placeholder="Type your note here... (autosaves)"></textarea>
         </div>
@@ -474,9 +497,11 @@
         const mainContentPanel = document.getElementById('mainContentPanel');
 
         const notepadModal = document.getElementById('notepadModal');
+        const notepadContent = document.getElementById('notepadContent');
         const notepadTextarea = document.getElementById('notepadTextarea');
         const notepadTitle = document.getElementById('notepadTitle');
         const closeNotepadBtn = document.getElementById('closeNotepadBtn');
+        const editNotepadBtn = document.getElementById('editNotepadBtn');
         let activeNoteKey = null;
 
         // Auto-hide navigation handling variables
@@ -647,10 +672,13 @@
                 
                 // Track mouse/touch variables for precise "long press" events[cite: 1]
                 let pressTimer;
+                let isLongPress = false;
                 const longPressDuration = 500; // Duration limit in milliseconds
 
                 const startPress = (e) => {
+                    isLongPress = false;
                     pressTimer = setTimeout(() => {
+                        isLongPress = true;
                         selectedVerseKey = key;
                         showOptionsMenu();
                     }, longPressDuration);
@@ -660,14 +688,37 @@
                     clearTimeout(pressTimer);
                 };
 
+                const handleTap = (e) => {
+                    clearTimeout(pressTimer);
+                    // If options menu is active or context items are visible, ignore normal tap actions
+                    if (optionsMenu.classList.contains('show')) return;
+                    
+                    if (!isLongPress) {
+                        // If the verse has a note, tapping it instantly opens the reader modal 
+                        if (notes[key]) {
+                            openNotepad(key, false); // Open in read-only / view-only mode first
+                        }
+                    }
+                };
+
                 // Attach touch listeners for responsive mobile interactions
                 div.addEventListener('touchstart', startPress, { passive: true });
-                div.addEventListener('touchend', cancelPress, { passive: true });
+                div.addEventListener('touchend', (e) => {
+                    cancelPress();
+                    if (!isLongPress) {
+                        handleTap(e);
+                    }
+                }, { passive: true });
                 div.addEventListener('touchmove', cancelPress, { passive: true });
 
                 // Supporting mouse actions for desktop compatibility
                 div.addEventListener('mousedown', startPress);
-                div.addEventListener('mouseup', cancelPress);
+                div.addEventListener('mouseup', (e) => {
+                    cancelPress();
+                    if (!isLongPress) {
+                        handleTap(e);
+                    }
+                });
                 div.addEventListener('mouseleave', cancelPress);
 
                 bibleContent.appendChild(div);
@@ -709,7 +760,7 @@
                     localStorage.setItem('bible_highlights', JSON.stringify(highlights));
                     updateVerseClasses(selectedVerseKey, targetVerseEl);
                 } else if (action === 'add-note' || action === 'edit-note') {
-                    openNotepad(selectedVerseKey);
+                    openNotepad(selectedVerseKey, true); // Direct edit mode
                 } else if (action === 'search-dictionary') {
                     // Grab Selected Verse Information 
                     const parts = selectedVerseKey.split('_');
@@ -737,7 +788,7 @@
         });
 
         // Notepad Handlers
-        function openNotepad(key) {
+        function openNotepad(key, isEditing = true) {
             activeNoteKey = key;
             const parts = key.split('_');
             const bookName = bibleData[parts[0]].name;
@@ -747,8 +798,28 @@
             notepadTitle.textContent = `Note: ${bookName} ${chNum}:${vNum}`;
             notepadTextarea.value = notes[key] || '';
             notepadModal.classList.add('show');
-            notepadTextarea.focus();
+            
+            if (isEditing) {
+                enableEditing();
+            } else {
+                disableEditing();
+            }
         }
+
+        function enableEditing() {
+            notepadTextarea.readOnly = false;
+            notepadTextarea.focus();
+            editNotepadBtn.style.display = 'none';
+        }
+
+        function disableEditing() {
+            notepadTextarea.readOnly = true;
+            editNotepadBtn.style.display = 'flex';
+        }
+
+        editNotepadBtn.onclick = () => {
+            enableEditing();
+        };
 
         function closeNotepad() {
             notepadModal.classList.remove('show');
@@ -756,6 +827,13 @@
         }
 
         closeNotepadBtn.onclick = closeNotepad;
+
+        // Dismiss the drawer when tapping outside the note pad card container
+        notepadModal.addEventListener('click', (e) => {
+            if (!notepadContent.contains(e.target)) {
+                closeNotepad();
+            }
+        });
 
         notepadTextarea.oninput = () => {
             if (!activeNoteKey) return;
@@ -884,7 +962,7 @@
             }
         };
 
-// Automatic DB Initial State Probe & Auto-load Pipeline
+        // Automatic DB Initial State Probe & Auto-load Pipeline
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 // 1. Check if we already have a Bible cached in database
