@@ -1,6 +1,7 @@
 {
-  "name": "TKH Bible",
+  "name": "TKH Bible - King James Version",
   "short_name": "TKH Bible",
+  "description": "Read and study the King James Version Bible offline. Daily verses, search, bookmarks, and audio. Free, fast, and ad-free Bible app for spiritual growth.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#111318",
@@ -8,14 +9,17 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["books", "education", "religion"],
+  "lang": "en"
 }
