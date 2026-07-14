@@ -5,7 +5,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e3a8a">
-    <link rel="icon" href="icon-192.png">
+    <link class="icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TKH Bible</title>
@@ -225,6 +225,24 @@
             border-left: 4px solid var(--md-primary);
         }
 
+        /* Highlight style for underlined verses */
+        .hl-underline {
+            text-decoration: underline;
+            text-decoration-color: var(--md-primary);
+            text-decoration-thickness: 2px;
+        }
+
+        /* Temporary high-light state during active context long press */
+        .hl-temp-press {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        /* Multi-verse selection styles */
+        .hl-multi-select {
+            background-color: rgba(168, 199, 250, 0.3) !important;
+            border-left: 4px solid var(--md-primary);
+        }
+
         /* Modern Android Options Context Menu */
         .context-menu {
             position: fixed;
@@ -258,6 +276,24 @@
         }
         .context-option:active {
             background-color: var(--md-surface-variant);
+        }
+
+        /* Multi-verse select bottom action bar */
+        .multi-select-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background-color: var(--md-surface);
+            border-top: 1px solid var(--md-surface-variant);
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--padding-base);
+            z-index: 25;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+        }
+        .multi-select-bar.show {
+            display: flex;
         }
 
         /* Notepad Drawer Modal overlay */
@@ -525,13 +561,15 @@
                 <h3 style="margin-bottom: 12px;">App Instructions</h3>
                 <hr style="border: 0; border-top: 1px solid var(--md-surface-variant); margin-bottom: 16px;">
                 
-                <h4>📖 Quick Verse Copy</h4>
+                <h4>📚 Quick Verse Copy</h4>
                 <p>Simply tap directly on any <strong>verse number</strong> to copy its contents alongside the Book, Chapter, and Verse reference to your clipboard instantly.</p>
 
-                <h4>💡 Long Press Menu Features</h4>
+                <h4>⚙️ Long Press Menu Features</h4>
                 <p>Press and hold on the body text of any verse to reveal advanced contextual actions:</p>
                 <ul>
+                    <li><strong>Multi-verse copy</strong>: Select and copy multiple verses at once. Tapped verses will be appended together under a unified book and chapter header reference.</li>
                     <li><strong>Highlight text</strong>: Cycle through colorful background highlight markers.</li>
+                    <li><strong>Underline verse</strong>: Underline key study materials directly in real-time.</li>
                     <li><strong>Add / Edit Notes</strong>: Open an automatic draft notepad drawer to link local reflections. Tapping a verse that has a note icon on it will instantly view your note.</li>
                     <li><strong>Search Dictionary</strong>: Link the verse to external language studies via external references.</li>
                 </ul>
@@ -544,6 +582,10 @@
 
     <!-- Context Options Menu for long press interactions -->
     <div class="context-menu" id="optionsMenu">
+        <button class="context-option" data-action="multi-copy">
+            <i data-lucide="copy" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Multi-verse copy</span>
+        </button>
         <button class="context-option" data-action="add-note">
             <i data-lucide="sticky-note" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
             <span>Add note</span>
@@ -552,6 +594,10 @@
             <i data-lucide="highlighter" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
             <span>Highlight text</span>
         </button>
+        <button class="context-option" data-action="underline-text">
+            <i data-lucide="underline" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Underline verse</span>
+        </button>
         <button class="context-option" data-action="edit-note">
             <i data-lucide="edit" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
             <span>Edit note</span>
@@ -559,6 +605,17 @@
         <button class="context-option" data-action="search-dictionary">
             <i data-lucide="book" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
             <span>Search dictionary</span>
+        </button>
+    </div>
+
+    <!-- Multi-verse Selection Bottom Action Bar -->
+    <div class="multi-select-bar" id="multiSelectBar">
+        <button id="cancelMultiSelectBtn" class="md-btn-fab" style="margin-top: 0; background-color: var(--md-surface-variant); color: var(--md-text-main);">
+            Cancel
+        </button>
+        <span id="multiSelectCounter" style="font-weight: 500; font-size: 15px; color: var(--md-primary);">0 verses selected</span>
+        <button id="confirmMultiCopyBtn" class="md-btn-fab" style="margin-top: 0;">
+            <i data-lucide="copy"></i> Copy Selected
         </button>
     </div>
 
@@ -603,6 +660,12 @@
         let selectedVerseKey = null; 
         let highlights = JSON.parse(localStorage.getItem('bible_highlights') || '{}');
         let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
+        let underlines = JSON.parse(localStorage.getItem('bible_underlines') || '{}');
+        let activeTempHighlightKey = null;
+
+        // Multi-verse copy states
+        let isMultiSelectMode = false;
+        let multiSelectedVerses = {}; // Maps key string -> boolean
 
         // DOM nodes references 
         const bookSelect = document.getElementById('bookSelect');
@@ -616,6 +679,11 @@
         const appHeader = document.getElementById('appHeader');
         const bottomNav = document.getElementById('bottomNav');
         const mainContentPanel = document.getElementById('mainContentPanel');
+
+        const multiSelectBar = document.getElementById('multiSelectBar');
+        const multiSelectCounter = document.getElementById('multiSelectCounter');
+        const cancelMultiSelectBtn = document.getElementById('cancelMultiSelectBtn');
+        const confirmMultiCopyBtn = document.getElementById('confirmMultiCopyBtn');
 
         const notepadModal = document.getElementById('notepadModal');
         const notepadContent = document.getElementById('notepadContent');
@@ -634,8 +702,8 @@
 
         // Scroll listener for auto-hiding top & bottom bars
         mainContentPanel.addEventListener('scroll', () => {
-            // Only auto-hide when viewing the reader panel
-            if (!document.getElementById('readerPanel').classList.contains('active')) return;
+            // Only auto-hide when viewing the reader panel and not in multi-selection mode
+            if (!document.getElementById('readerPanel').classList.contains('active') || isMultiSelectMode) return;
 
             let scrollTop = mainContentPanel.scrollTop;
             if (scrollTop > lastScrollTop && scrollTop > 50) {
@@ -650,6 +718,7 @@
             // Check if clicking inside context menus, select menus, or target verse interactions
             if (optionsMenu.classList.contains('show') || 
                 notepadModal.classList.contains('show') || 
+                isMultiSelectMode ||
                 e.target.closest('.md-select') || 
                 e.target.closest('.context-menu') || 
                 e.target.closest('.bottom-nav') ||
@@ -795,10 +864,12 @@
                 
                 let div = document.createElement('div');
                 
-                // Construct classes using both highlights and active notes
+                // Construct classes using highlights, active notes, underlines, and multi-select highlights
                 const highlightClass = highlights[key] ? `hl-${highlights[key]}` : '';
                 const noteClass = notes[key] ? 'hl-note' : '';
-                div.className = `verse-layout ${highlightClass} ${noteClass}`.trim().replace(/\s+/g, ' ');
+                const underlineClass = underlines[key] ? 'hl-underline' : '';
+                const multiClass = (isMultiSelectMode && multiSelectedVerses[key]) ? 'hl-multi-select' : '';
+                div.className = `verse-layout ${highlightClass} ${noteClass} ${underlineClass} ${multiClass}`.trim().replace(/\s+/g, ' ');
                 
                 div.id = `v_pos_${i}`;
                 div.innerHTML = `<span class="verse-num" data-vkey="${key}">${vNum}</span>${cleanText}`;
@@ -807,6 +878,7 @@
                 const vNumSpan = div.querySelector('.verse-num');
                 vNumSpan.addEventListener('click', (e) => {
                     e.stopPropagation(); // Avoid triggering highlight context or scroll hides
+                    if (isMultiSelectMode) return; // Disable direct single copy during multi-select
                     
                     const bookName = bibleData[bIdx].name;
                     const chNum = parseInt(cIdx) + 1;
@@ -825,12 +897,24 @@
                 const longPressDuration = 500; // Duration limit in milliseconds
 
                 const startPress = (e) => {
+                    if (isMultiSelectMode) return; // No long press actions while multi-selecting
                     // Do not initiate long press action if clicking specifically on the verse number copy button
                     if (e.target.classList.contains('verse-num')) return;
                     isLongPress = false;
                     pressTimer = setTimeout(() => {
                         isLongPress = true;
                         selectedVerseKey = key;
+                        
+                        // Clear any previous active temporary highlights
+                        if (activeTempHighlightKey) {
+                            const prevEl = document.querySelector(`.verse-layout[id="v_pos_${activeTempHighlightKey.split('_')[2]}"]`);
+                            if (prevEl) prevEl.classList.remove('hl-temp-press');
+                        }
+
+                        // Temporarily highlight the long-pressed verse
+                        div.classList.add('hl-temp-press');
+                        activeTempHighlightKey = key;
+
                         showOptionsMenu();
                     }, longPressDuration);
                 };
@@ -840,10 +924,30 @@
                 };
 
                 const handleTap = (e) => {
+                    if (isMultiSelectMode) {
+                        // In multi-select mode, clicking a verse selects or deselects it
+                        if (multiSelectedVerses[key]) {
+                            delete multiSelectedVerses[key];
+                        } else {
+                            multiSelectedVerses[key] = true;
+                        }
+                        updateVerseClasses(key, div);
+                        updateMultiSelectBar();
+                        return;
+                    }
+
                     if (e.target.classList.contains('verse-num')) return;
                     clearTimeout(pressTimer);
-                    // If options menu is active or context items are visible, ignore normal tap actions
-                    if (optionsMenu.classList.contains('show')) return;
+                    
+                    // Tap same verse when options menu is active -> remove highlight & hide options box
+                    if (optionsMenu.classList.contains('show')) {
+                        if (selectedVerseKey === key) {
+                            div.classList.remove('hl-temp-press');
+                            activeTempHighlightKey = null;
+                            hideOptionsMenu();
+                        }
+                        return;
+                    }
                     
                     if (!isLongPress) {
                         // If the verse has a note, tapping it instantly opens the reader modal 
@@ -884,8 +988,98 @@
 
         function hideOptionsMenu() {
             optionsMenu.classList.remove('show');
+            if (activeTempHighlightKey) {
+                const prevEl = document.querySelector(`.verse-layout[id="v_pos_${activeTempHighlightKey.split('_')[2]}"]`);
+                if (prevEl) prevEl.classList.remove('hl-temp-press');
+                activeTempHighlightKey = null;
+            }
             selectedVerseKey = null;
         }
+
+        // Multi-Verse Selection Utilities
+        function startMultiSelectMode(initialKey) {
+            isMultiSelectMode = true;
+            multiSelectedVerses = {};
+            if (initialKey) {
+                multiSelectedVerses[initialKey] = true;
+            }
+            hideBars();
+            multiSelectBar.classList.add('show');
+            updateMultiSelectBar();
+            
+            // Re-render local container to apply style layouts
+            const targetVerseEl = document.querySelector(`.verse-layout[id="v_pos_${initialKey.split('_')[2]}"]`);
+            updateVerseClasses(initialKey, targetVerseEl);
+        }
+
+        function stopMultiSelectMode() {
+            isMultiSelectMode = false;
+            multiSelectedVerses = {};
+            multiSelectBar.classList.remove('show');
+            showBars();
+            renderChapterView();
+        }
+
+        function updateMultiSelectBar() {
+            const count = Object.keys(multiSelectedVerses).length;
+            multiSelectCounter.textContent = `${count} ${count === 1 ? 'verse' : 'verses'} selected`;
+        }
+
+        cancelMultiSelectBtn.onclick = () => {
+            stopMultiSelectMode();
+        };
+
+        confirmMultiCopyBtn.onclick = () => {
+            const keys = Object.keys(multiSelectedVerses);
+            if (keys.length === 0) {
+                showToast("No verses selected");
+                return;
+            }
+
+            // Group selected verses by book and chapter for clear unified top references
+            // key structure: bookIdx_chapterIdx_verseIdx
+            const grouped = {};
+            keys.forEach(key => {
+                const parts = key.split('_').map(Number);
+                const bIdx = parts[0];
+                const cIdx = parts[1];
+                const vIdx = parts[2];
+                
+                const bName = bibleData[bIdx].name;
+                const chNum = cIdx + 1;
+                const groupKey = `${bName} Chapter ${chNum}`;
+                
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = [];
+                }
+                grouped[groupKey].push({
+                    vNum: vIdx + 1,
+                    text: bibleData[bIdx].chapters[cIdx][vIdx].replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "")
+                });
+            });
+
+            // Format compiled copied text structure
+            let fullCopiedText = "";
+            for (const [refHeader, versesList] of Object.entries(grouped)) {
+                // Sort verses ascending inside group
+                versesList.sort((a, b) => a.vNum - b.vNum);
+                
+                const verseRefsStr = versesList.map(v => v.vNum).join(', ');
+                fullCopiedText += `${refHeader}:${verseRefsStr}\n\n`;
+                
+                versesList.forEach(v => {
+                    fullCopiedText += `[${v.vNum}] ${v.text}\n`;
+                });
+                fullCopiedText += `\n`;
+            }
+
+            navigator.clipboard.writeText(fullCopiedText.trim()).then(() => {
+                showToast("Multi-verse text copied!");
+                stopMultiSelectMode();
+            }).catch(err => {
+                console.error("Multi copy execution error: ", err);
+            });
+        };
 
         // Configure Option Menu selection buttons
         document.querySelectorAll('.context-option').forEach(opt => {
@@ -897,7 +1091,9 @@
                 const targetVerseEl = document.querySelector(`.verse-layout[id="v_pos_${selectedVerseKey.split('_')[2]}"]`);
                 
                 // Basic feature actions
-                if (action === 'highlight-text') {
+                if (action === 'multi-copy') {
+                    startMultiSelectMode(selectedVerseKey);
+                } else if (action === 'highlight-text') {
                     // Cycles through colors on selection
                     const colors = ['yellow', 'green', 'blue', 'pink', 'none'];
                     const currentColor = highlights[selectedVerseKey] || 'none';
@@ -910,6 +1106,15 @@
                         highlights[selectedVerseKey] = color;
                     }
                     localStorage.setItem('bible_highlights', JSON.stringify(highlights));
+                    updateVerseClasses(selectedVerseKey, targetVerseEl);
+                } else if (action === 'underline-text') {
+                    // Toggles underline option
+                    if (underlines[selectedVerseKey]) {
+                        delete underlines[selectedVerseKey];
+                    } else {
+                        underlines[selectedVerseKey] = true;
+                    }
+                    localStorage.setItem('bible_underlines', JSON.stringify(underlines));
                     updateVerseClasses(selectedVerseKey, targetVerseEl);
                 } else if (action === 'add-note' || action === 'edit-note') {
                     openNotepad(selectedVerseKey, true); // Direct edit mode
@@ -934,7 +1139,7 @@
 
         // Close options sheet when clicking outside
         document.addEventListener('click', (e) => {
-            if (!optionsMenu.contains(e.target)) {
+            if (!optionsMenu.contains(e.target) && !e.target.closest('.verse-layout')) {
                 hideOptionsMenu();
             }
         });
@@ -1005,11 +1210,17 @@
             if (!el) return;
             const highlightClass = highlights[key] ? `hl-${highlights[key]}` : '';
             const noteClass = notes[key] ? 'hl-note' : '';
-            el.className = `verse-layout ${highlightClass} ${noteClass}`.trim().replace(/\s+/g, ' ');
+            const underlineClass = underlines[key] ? 'hl-underline' : '';
+            const tempClass = (key === activeTempHighlightKey) ? 'hl-temp-press' : '';
+            const multiClass = (isMultiSelectMode && multiSelectedVerses[key]) ? 'hl-multi-select' : '';
+            el.className = `verse-layout ${highlightClass} ${noteClass} ${underlineClass} ${tempClass} ${multiClass}`.trim().replace(/\s+/g, ' ');
         }
 
         // Interface Switcher (Reader, Search, Settings, Help Guide)
         function switchPanel(panelId) {
+            if (isMultiSelectMode) {
+                stopMultiSelectMode();
+            }
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             hideOptionsMenu();
@@ -1117,8 +1328,10 @@
                     bibleData = null;
                     highlights = {};
                     notes = {};
+                    underlines = {};
                     localStorage.removeItem('bible_highlights');
                     localStorage.removeItem('bible_notes');
+                    localStorage.removeItem('bible_underlines');
                     switchPanel('reader');
                 };
             }
