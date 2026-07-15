@@ -321,6 +321,11 @@
             flex-direction: column;
             height: 60vh;
         }
+        .notepad-content h3 {
+            color: var(--md-primary);
+            font-weight: 500;
+            font-size: 18px;
+        }
         .notepad-header {
             display: flex;
             justify-content: space-between;
@@ -1037,6 +1042,7 @@
             stopMultiSelectMode();
         };
 
+        // Polished copy system (Formats references dynamically in series & single form)
         confirmMultiCopyBtn.onclick = () => {
             const keys = Object.keys(multiSelectedVerses);
             if (keys.length === 0) {
@@ -1044,8 +1050,7 @@
                 return;
             }
 
-            // Group selected verses by book and chapter for clear unified top references
-            // key structure: bookIdx_chapterIdx_verseIdx
+            // Group selections by Book Index & Chapter Index[cite: 1]
             const grouped = {};
             keys.forEach(key => {
                 const parts = key.split('_').map(Number);
@@ -1053,36 +1058,70 @@
                 const cIdx = parts[1];
                 const vIdx = parts[2];
                 
-                const bName = bibleData[bIdx].name;
-                const chNum = cIdx + 1;
-                const groupKey = `${bName} Chapter ${chNum}`;
+                if (!grouped[bIdx]) grouped[bIdx] = {};
+                if (!grouped[bIdx][cIdx]) grouped[bIdx][cIdx] = [];
                 
-                if (!grouped[groupKey]) {
-                    grouped[groupKey] = [];
-                }
-                grouped[groupKey].push({
+                grouped[bIdx][cIdx].push({
                     vNum: vIdx + 1,
                     text: bibleData[bIdx].chapters[cIdx][vIdx].replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "")
                 });
             });
 
-            // Format compiled copied text structure
             let fullCopiedText = "";
-            for (const [refHeader, versesList] of Object.entries(grouped)) {
-                // Sort verses ascending inside group
-                versesList.sort((a, b) => a.vNum - b.vNum);
-                
-                const verseRefsStr = versesList.map(v => v.vNum).join(', ');
-                fullCopiedText += `${refHeader}:${verseRefsStr}\n\n`;
-                
-                versesList.forEach(v => {
-                    fullCopiedText += `[${v.vNum}] ${v.text}\n`;
-                });
-                fullCopiedText += `\n`;
+
+            // Format references and build copy text
+            for (const bIdx of Object.keys(grouped).map(Number)) {
+                const bookName = bibleData[bIdx].name;
+                for (const cIdx of Object.keys(grouped[bIdx]).map(Number)) {
+                    const chapterNum = cIdx + 1;
+                    const versesList = grouped[bIdx][cIdx];
+                    
+                    // Sort verses ascending inside group
+                    versesList.sort((a, b) => a.vNum - b.vNum);
+
+                    // Build formatted dynamic range representation (e.g., "1:2-7; 10; 12-14")
+                    const segments = [];
+                    let rangeStart = null;
+                    let rangeEnd = null;
+
+                    for (let i = 0; i < versesList.length; i++) {
+                        const currentVal = versesList[i].vNum;
+                        const nextVal = versesList[i + 1] ? versesList[i + 1].vNum : null;
+
+                        if (rangeStart === null) {
+                            rangeStart = currentVal;
+                            rangeEnd = currentVal;
+                        }
+
+                        if (nextVal === currentVal + 1) {
+                            // Part of a series progression
+                            rangeEnd = nextVal;
+                        } else {
+                            // Gap detected or end of list, close current segment
+                            if (rangeStart === rangeEnd) {
+                                segments.push(`${rangeStart}`);
+                            } else {
+                                segments.push(`${rangeStart}-${rangeEnd}`);
+                            }
+                            rangeStart = null;
+                            rangeEnd = null;
+                        }
+                    }
+
+                    // Format reference header (e.g. "Exodus 1:2-7; 10")
+                    const formattedRef = `${bookName} ${chapterNum}:${segments.join(', ')}`;
+                    fullCopiedText += `${formattedRef}\n\n`;
+
+                    // Add content verses 
+                    versesList.forEach(v => {
+                        fullCopiedText += `[${v.vNum}] ${v.text}\n`;
+                    });
+                    fullCopiedText += `\n`;
+                }
             }
 
             navigator.clipboard.writeText(fullCopiedText.trim()).then(() => {
-                showToast("Multi-verse text copied!");
+                showToast("Verses Copied!");
                 stopMultiSelectMode();
             }).catch(err => {
                 console.error("Multi copy execution error: ", err);
@@ -1136,7 +1175,7 @@
                     // Generate dictionary target search queries
                     const query = encodeURIComponent(`${bookName} ${chNum}:${vNum}`);
                     // Redirect directly to Blue Letter Bible's resource look up
-                    const dictionaryUrl = `https://www.blueletterbible.org/search/preSearch.cfm?Criteria=${query}`;
+                    const dictionaryUrl = `https://thekingsbible.com/Dictionary`;
                     
                     window.open(dictionaryUrl, '_blank');
                 }
