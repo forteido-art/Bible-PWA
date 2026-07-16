@@ -1,7 +1,7 @@
 {
   "name": "TKH Bible - King James Version",
   "short_name": "TKH Bible",
-  "description": "A Free Personal Study Bible App from The King's Household Church.",
+  "description": "A Free and Personal Study Bible App from The King's Household Church.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#111318",
