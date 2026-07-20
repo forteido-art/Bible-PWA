@@ -1,12 +1,8 @@
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "app.vercel.bible_pwa_alpha.twa",
-      "sha256_cert_fingerprints": [
-      "0D:96:93:9E:43:87:E5:F6:90:F8:74:C3:F4:D1:2E:0B:40:18:1F:43:BB:28:8B:AC:12:0E:CB:6F:F4:1B:8A:9B"
-      ]
-    }
-  }
-]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.workers.spiritlightservice.tkh_bible.twa",
+        "sha256_cert_fingerprints": ["1A:A0:1A:CE:D8:69:52:C6:17:8C:BF:8E:45:BF:7F:9A:28:FD:8A:7E:E4:A9:36:9D:D6:A3:D1:0F:84:4B:1D:14"]
+      }
+    }]
