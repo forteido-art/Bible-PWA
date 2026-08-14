@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#1e3a8a">
     <link class="icon" href="icon-192.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TKH Bible</title>
     <script src="lucide.min.js"></script>
     <script>if(typeof lucide === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@0.293.0/dist/umd/lucide.min.js"><\/script>'); }</script>
@@ -25,6 +25,10 @@
             --md-text-muted: #c4c6d0;
             --padding-base: 16px;
             --green-donate: #2ecc71;
+            --header-height: 64px;
+            --nav-height: 80px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         * {
@@ -37,20 +41,36 @@
             -webkit-user-select: none;
         }
 
-        body {
-            background-color: var(--md-bg);
-            color: var(--md-text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        html {
+            height: 100%;
+            height: 100dvh;
             overflow: hidden;
         }
 
-        /* Top Action Bar with slide transition */
+        body {
+            background-color: var(--md-bg);
+            color: var(--md-text-main);
+            height: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            /* Prevent progressive layout drift offline / on resume */
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Top Action Bar – fixed so transform truly leaves layout flow */
         header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             background-color: var(--md-surface);
-            height: 64px;
-            padding: 0 var(--padding-base);
+            height: calc(var(--header-height) + var(--safe-top));
+            padding: var(--safe-top) var(--padding-base) 0 var(--padding-base);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -118,8 +138,18 @@
             flex: 1;
             overflow-y: auto;
             padding: var(--padding-base);
-            padding-bottom: 90px;
-            transition: padding-bottom 0.3s ease;
+            /* Account for fixed header + bottom nav + safe areas so content never drifts off-screen */
+            padding-top: calc(var(--header-height) + var(--safe-top) + var(--padding-base));
+            padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
+            transition: padding-bottom 0.3s ease, padding-top 0.3s ease;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        /* When bars are hidden, reduce reserved space so content fills the screen cleanly */
+        main.bars-hidden {
+            padding-top: calc(var(--safe-top) + var(--padding-base));
+            padding-bottom: calc(var(--safe-bottom) + 16px);
         }
 
         .view-panel {
@@ -193,7 +223,7 @@
         /* Toast Notifications style */
         .toast-notification {
             position: fixed;
-            bottom: 100px;
+            bottom: calc(100px + var(--safe-bottom));
             left: 50%;
             transform: translateX(-50%) translateY(100px);
             background-color: var(--md-surface-variant);
@@ -246,7 +276,7 @@
         /* Modern Android Options Context Menu */
         .context-menu {
             position: fixed;
-            bottom: 90px; left: 16px; right: 16px;
+            bottom: calc(90px + var(--safe-bottom)); left: 16px; right: 16px;
             background-color: var(--md-surface);
             border-radius: 16px;
             padding: 8px 0;
@@ -282,13 +312,15 @@
         .multi-select-bar {
             position: fixed;
             bottom: 0; left: 0; right: 0;
-            height: 80px;
+            height: calc(var(--nav-height) + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
             background-color: var(--md-surface);
             border-top: 1px solid var(--md-surface-variant);
             display: none;
             align-items: center;
             justify-content: space-between;
-            padding: 0 var(--padding-base);
+            padding-left: var(--padding-base);
+            padding-right: var(--padding-base);
             z-index: 25;
             box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
         }
@@ -414,8 +446,16 @@
             margin-bottom: 10px;
             cursor: pointer;
         }
+        .search-result-item:last-child {
+            margin-bottom: 24px; /* Extra clearance so last result is never cut off by bottom nav */
+        }
         .search-result-title {
             font-size: 13px; color: var(--md-primary); font-weight: bold; margin-bottom: 4px;
+        }
+
+        /* Ensure search results list itself has breathing room above the fixed bottom bar */
+        #searchResults {
+            padding-bottom: 16px;
         }
 
         /* Settings view items */
@@ -489,7 +529,9 @@
         /* Bottom Nav Tab Bar with slide transition */
         .bottom-nav {
             background-color: var(--md-surface);
-            height: 80px; position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(var(--nav-height) + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            position: fixed; bottom: 0; left: 0; right: 0;
             display: flex; justify-content: space-around; align-items: center;
             border-top: 1px solid var(--md-surface-variant); z-index: 10;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -676,6 +718,11 @@
         let underlines = JSON.parse(localStorage.getItem('bible_underlines') || '{}');
         let activeTempHighlightKey = null;
 
+        // Robust reading position memory (survives background, screen sleep, reloads)
+        let readingState = JSON.parse(localStorage.getItem('bible_reading_state') || '{}');
+        let isRestoringState = false;
+        let scrollSaveTimer = null;
+
         // Multi-verse copy states
         let isMultiSelectMode = false;
         let multiSelectedVerses = {}; // Maps key string -> boolean
@@ -713,10 +760,39 @@
         let lastScrollTop = 0;
         let barsHidden = false;
 
-        // Scroll listener for auto-hiding top & bottom bars
+        // Persist current reading position (book, chapter, scroll, panel)
+        function saveReadingState() {
+            if (!bibleData) return;
+            const state = {
+                bookIdx: parseInt(bookSelect.value) || 0,
+                chapterIdx: parseInt(chapterSelect.value) || 0,
+                scrollTop: mainContentPanel.scrollTop || 0,
+                panel: document.querySelector('.view-panel.active')?.id?.replace('Panel', '') || 'reader'
+            };
+            // Normalize panel id
+            if (state.panel === 'howTo') state.panel = 'guide';
+            if (state.panel === 'upload') state.panel = 'reader';
+            readingState = state;
+            try {
+                localStorage.setItem('bible_reading_state', JSON.stringify(state));
+            } catch (e) { /* quota or private mode – ignore */ }
+        }
+
+        function scheduleScrollSave() {
+            if (isRestoringState || isMultiSelectMode) return;
+            if (scrollSaveTimer) clearTimeout(scrollSaveTimer);
+            scrollSaveTimer = setTimeout(() => {
+                saveReadingState();
+            }, 250);
+        }
+
+        // Scroll listener for auto-hiding top & bottom bars + position memory
         mainContentPanel.addEventListener('scroll', () => {
             // Only auto-hide when viewing the reader panel and not in multi-selection mode
-            if (!document.getElementById('readerPanel').classList.contains('active') || isMultiSelectMode) return;
+            if (!document.getElementById('readerPanel').classList.contains('active') || isMultiSelectMode) {
+                scheduleScrollSave();
+                return;
+            }
 
             let scrollTop = mainContentPanel.scrollTop;
             if (scrollTop > lastScrollTop && scrollTop > 50) {
@@ -724,6 +800,7 @@
                 hideBars();
             }
             lastScrollTop = scrollTop;
+            scheduleScrollSave();
         });
 
         // Tap on screen to reveal hidden bars
@@ -750,7 +827,10 @@
             if (barsHidden) return;
             appHeader.classList.add('hidden');
             bottomNav.classList.add('hidden');
-            mainContentPanel.style.paddingBottom = "16px";
+            mainContentPanel.classList.add('bars-hidden');
+            // Clear any leftover inline padding from older versions so CSS class fully controls layout
+            mainContentPanel.style.paddingBottom = '';
+            mainContentPanel.style.paddingTop = '';
             barsHidden = true;
         }
 
@@ -758,7 +838,9 @@
             if (!barsHidden) return;
             appHeader.classList.remove('hidden');
             bottomNav.classList.remove('hidden');
-            mainContentPanel.style.paddingBottom = "90px";
+            mainContentPanel.classList.remove('bars-hidden');
+            mainContentPanel.style.paddingBottom = '';
+            mainContentPanel.style.paddingTop = '';
             barsHidden = false;
         }
 
@@ -805,6 +887,9 @@
                         bibleData = normalizeLayoutStructure(flatVerses);
                     }
                     await saveToDB(bibleData);
+                    // New translation – start from beginning
+                    readingState = { bookIdx: 0, chapterIdx: 0, scrollTop: 0, panel: 'reader' };
+                    localStorage.setItem('bible_reading_state', JSON.stringify(readingState));
                     switchPanel('reader');
                     initPresentationEngine();
                 } catch(err) {
@@ -840,18 +925,40 @@
                 let opt = document.createElement('option'); opt.value = i; opt.textContent = b.name;
                 bookSelect.appendChild(opt);
             });
-            bookSelect.onchange = () => populateChapters();
-            chapterSelect.onchange = () => renderChapterView();
-            populateChapters();
+            bookSelect.onchange = () => {
+                populateChapters();
+                saveReadingState();
+            };
+            chapterSelect.onchange = () => {
+                renderChapterView();
+                saveReadingState();
+            };
+
+            // Restore last book/chapter if valid
+            isRestoringState = true;
+            const savedBook = (typeof readingState.bookIdx === 'number' && readingState.bookIdx >= 0 && readingState.bookIdx < bibleData.length)
+                ? readingState.bookIdx : 0;
+            bookSelect.value = savedBook;
+            populateChapters(); // this will also restore chapter + scroll
+            isRestoringState = false;
         }
 
         function populateChapters() {
             const book = bibleData[bookSelect.value];
+            if (!book) return;
             chapterSelect.innerHTML = "";
             book.chapters.forEach((_, i) => {
                 let opt = document.createElement('option'); opt.value = i; opt.textContent = `Ch ${i+1}`;
                 chapterSelect.appendChild(opt);
             });
+
+            // Restore chapter index when possible
+            let targetChapter = 0;
+            if (isRestoringState && typeof readingState.chapterIdx === 'number' &&
+                readingState.chapterIdx >= 0 && readingState.chapterIdx < book.chapters.length) {
+                targetChapter = readingState.chapterIdx;
+            }
+            chapterSelect.value = targetChapter;
             renderChapterView();
         }
 
@@ -868,7 +975,11 @@
             const cIdx = chapterSelect.value;
             const verses = bibleData[bIdx].chapters[cIdx];
             bibleContent.innerHTML = "";
-            mainContentPanel.scrollTop = 0;
+
+            // Only force top when user actively changes chapter; preserve scroll on restore
+            if (!isRestoringState) {
+                mainContentPanel.scrollTop = 0;
+            }
 
             verses.forEach((vText, i) => {
                 let vNum = i + 1;
@@ -992,6 +1103,17 @@
 
                 bibleContent.appendChild(div);
             });
+
+            // Restore exact scroll position after DOM is ready (background / sleep resume)
+            if (isRestoringState && typeof readingState.scrollTop === 'number' && readingState.scrollTop > 0) {
+                // Double rAF ensures layout is complete before applying scroll
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        mainContentPanel.scrollTop = readingState.scrollTop;
+                        lastScrollTop = readingState.scrollTop;
+                    });
+                });
+            }
         }
 
         // Options Menu Handlers
@@ -1017,6 +1139,9 @@
                 multiSelectedVerses[initialKey] = true;
             }
             hideBars();
+            // Multi-select bar occupies the same bottom space as the nav – keep full bottom padding
+            // so verses are never hidden behind it
+            mainContentPanel.classList.remove('bars-hidden');
             multiSelectBar.classList.add('show');
             updateMultiSelectBar();
             
@@ -1305,6 +1430,11 @@
                 appTitle.style.display = "block";
                 appTitle.textContent = "Guide";
             }
+
+            // Persist active panel so resume returns to the same view
+            if (!isRestoringState) {
+                saveReadingState();
+            }
         }
 
         // Navigation Bindings
@@ -1396,9 +1526,11 @@
                     highlights = {};
                     notes = {};
                     underlines = {};
+                    readingState = {};
                     localStorage.removeItem('bible_highlights');
                     localStorage.removeItem('bible_notes');
                     localStorage.removeItem('bible_underlines');
+                    localStorage.removeItem('bible_reading_state');
                     switchPanel('reader');
                 };
             }
@@ -1415,8 +1547,13 @@
                 const cachedData = await loadFromDB();
                 if (cachedData) {
                     bibleData = cachedData;
-                    switchPanel('reader');
-                    initPresentationEngine();
+                    isRestoringState = true;
+                    initPresentationEngine(); // restores book + chapter + scroll
+                    // Restore last active panel (reader / search / settings / guide)
+                    const panelToRestore = (readingState.panel === 'search' || readingState.panel === 'settings' || readingState.panel === 'guide')
+                        ? readingState.panel : 'reader';
+                    switchPanel(panelToRestore);
+                    isRestoringState = false;
                     return;
                 }
                 
@@ -1439,8 +1576,12 @@
                     
                     // Save to local IndexedDB database so it loads instantly next time
                     await saveToDB(bibleData);
-                    switchPanel('reader');
+                    isRestoringState = true;
                     initPresentationEngine();
+                    const panelToRestore = (readingState.panel === 'search' || readingState.panel === 'settings' || readingState.panel === 'guide')
+                        ? readingState.panel : 'reader';
+                    switchPanel(panelToRestore);
+                    isRestoringState = false;
                 } else {
                     // Fallback to upload panel if kjv.json isn't bundled
                     switchPanel('upload');
@@ -1450,6 +1591,17 @@
                 switchPanel('upload');
             }
         });
+
+        // Force-save state when app is backgrounded, screen sleeps, or page is unloaded
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                saveReadingState();
+            }
+        });
+        window.addEventListener('pagehide', saveReadingState);
+        window.addEventListener('beforeunload', saveReadingState);
+        // Also save on freeze (Page Lifecycle API – modern Chromium)
+        document.addEventListener('freeze', saveReadingState);
     </script>
 <script>
 // Register service worker for install
