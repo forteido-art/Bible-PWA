@@ -635,6 +635,14 @@
         .note-topic-input::placeholder {
             color: var(--md-text-muted);
         }
+        /* View mode: topic reads as a static title */
+        .note-topic-input.view-mode {
+            background-color: transparent;
+            padding-left: 4px;
+            padding-right: 4px;
+            cursor: default;
+            pointer-events: none;
+        }
         .notepad-editor-actions {
             display: flex;
             gap: 4px;
@@ -676,6 +684,12 @@
         .note-body-textarea::placeholder {
             color: var(--md-text-muted);
         }
+        /* View mode: body is comfortable read-only text */
+        .note-body-textarea.view-mode {
+            background-color: transparent;
+            cursor: default;
+            caret-color: transparent;
+        }
         .notepad-editor-footer {
             display: flex;
             justify-content: space-between;
@@ -686,6 +700,23 @@
         .note-meta {
             font-size: 12px;
             color: var(--md-text-muted);
+        }
+        /* Edit note button (view mode) */
+        .notepad-edit-mode-btn {
+            background-color: var(--md-secondary-container);
+            color: var(--md-on-secondary-container);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .notepad-edit-mode-btn:active {
+            opacity: 0.85;
         }
 
         /* Bottom Nav Tab Bar with slide transition */
@@ -793,6 +824,9 @@
                 <textarea id="noteBodyTextarea" class="note-body-textarea" placeholder="Start writing your note..."></textarea>
                 <div class="notepad-editor-footer">
                     <span id="noteMetaInfo" class="note-meta"></span>
+                    <button id="btnEditNote" class="notepad-edit-mode-btn" title="Edit note">
+                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i> Edit
+                    </button>
                     <button id="btnSaveNote" class="md-btn-fab" style="margin-top: 0; padding: 10px 20px;">
                         <i data-lucide="check" style="width: 16px; height: 16px;"></i> Save
                     </button>
@@ -1688,6 +1722,7 @@
         const btnNewNote = document.getElementById('btnNewNote');
         const btnBackToNoteList = document.getElementById('btnBackToNoteList');
         const btnSaveNote = document.getElementById('btnSaveNote');
+        const btnEditNote = document.getElementById('btnEditNote');
         const btnDeleteNote = document.getElementById('btnDeleteNote');
         const btnShareNotePdf = document.getElementById('btnShareNotePdf');
 
@@ -1714,6 +1749,32 @@
         function showNotepadEditorView() {
             notepadListView.style.display = 'none';
             notepadEditorView.style.display = 'flex';
+        }
+
+        /** Enter comfortable read-only viewing mode for the current note */
+        function enterJotterViewMode() {
+            isJotterEditing = false;
+            noteTopicInput.readOnly = true;
+            noteBodyTextarea.readOnly = true;
+            noteTopicInput.classList.add('view-mode');
+            noteBodyTextarea.classList.add('view-mode');
+            btnSaveNote.style.display = 'none';
+            btnEditNote.style.display = 'flex';
+            noteTopicInput.blur();
+            noteBodyTextarea.blur();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        /** Enter editable mode for the current note */
+        function enterJotterEditMode() {
+            isJotterEditing = true;
+            noteTopicInput.readOnly = false;
+            noteBodyTextarea.readOnly = false;
+            noteTopicInput.classList.remove('view-mode');
+            noteBodyTextarea.classList.remove('view-mode');
+            btnSaveNote.style.display = 'inline-flex';
+            btnEditNote.style.display = 'none';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function renderJotterNotesList() {
@@ -1752,13 +1813,12 @@
             const note = jotterNotes.find(n => n.id === id);
             if (!note) return;
             activeJotterNoteId = id;
-            isJotterEditing = true;
             noteTopicInput.value = note.topic || '';
             noteBodyTextarea.value = note.body || '';
             noteMetaInfo.textContent = 'Updated ' + formatNoteDate(note.updated || note.created);
             showNotepadEditorView();
-            // Focus body for quick edit
-            setTimeout(() => noteBodyTextarea.focus(), 100);
+            // Existing notes open in comfortable view mode (edit functions off)
+            enterJotterViewMode();
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
@@ -1769,17 +1829,18 @@
             jotterNotes.push(note);
             saveJotterNotes();
             activeJotterNoteId = id;
-            isJotterEditing = true;
             noteTopicInput.value = '';
             noteBodyTextarea.value = '';
             noteMetaInfo.textContent = 'New note · ' + formatNoteDate(now);
             showNotepadEditorView();
+            // New notes start in edit mode
+            enterJotterEditMode();
             setTimeout(() => noteTopicInput.focus(), 100);
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function saveCurrentJotterNote() {
-            if (!activeJotterNoteId) return;
+            if (!activeJotterNoteId || !isJotterEditing) return;
             const note = jotterNotes.find(n => n.id === activeJotterNoteId);
             if (!note) return;
             note.topic = noteTopicInput.value.trim() || 'Untitled';
@@ -1887,8 +1948,8 @@
         // Bind notepad controls
         btnNewNote.onclick = createNewJotterNote;
         btnBackToNoteList.onclick = () => {
-            // Auto-save on back if content exists
-            if (activeJotterNoteId) {
+            // Auto-save on back only when in edit mode and content exists
+            if (activeJotterNoteId && isJotterEditing) {
                 const note = jotterNotes.find(n => n.id === activeJotterNoteId);
                 if (note) {
                     const topic = noteTopicInput.value.trim();
@@ -1909,13 +1970,17 @@
             renderJotterNotesList();
         };
         btnSaveNote.onclick = saveCurrentJotterNote;
+        btnEditNote.onclick = () => {
+            enterJotterEditMode();
+            setTimeout(() => noteBodyTextarea.focus(), 100);
+        };
         btnDeleteNote.onclick = deleteCurrentJotterNote;
         btnShareNotePdf.onclick = shareNoteAsPdf;
 
-        // Autosave while typing (debounced)
+        // Autosave while typing (debounced) — only when editing
         let jotterSaveTimer = null;
         function scheduleJotterAutosave() {
-            if (!activeJotterNoteId) return;
+            if (!activeJotterNoteId || !isJotterEditing) return;
             if (jotterSaveTimer) clearTimeout(jotterSaveTimer);
             jotterSaveTimer = setTimeout(() => {
                 saveCurrentJotterNote();
