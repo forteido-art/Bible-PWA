@@ -2325,11 +2325,8 @@
                     bibleData = cachedData;
                     isRestoringState = true;
                     initPresentationEngine(); // restores book + chapter + scroll
-                    // Restore last active panel. Search is intentionally excluded so the
-                    // default/startup view is always the Bible reader (or notepad/settings/guide).
-                    const panelToRestore = (readingState.panel === 'settings' || readingState.panel === 'guide' || readingState.panel === 'notepad')
-                        ? readingState.panel : 'reader';
-                    switchPanel(panelToRestore);
+                    // Bible reader is the default startup view
+                    switchPanel('reader');
                     isRestoringState = false;
                     notifyParentReady();
                     return;
@@ -2356,10 +2353,8 @@
                     await saveToDB(bibleData);
                     isRestoringState = true;
                     initPresentationEngine();
-                    // Search is intentionally excluded so startup view is always the Bible reader
-                    const panelToRestore = (readingState.panel === 'settings' || readingState.panel === 'guide' || readingState.panel === 'notepad')
-                        ? readingState.panel : 'reader';
-                    switchPanel(panelToRestore);
+                    // Bible reader is the default startup view
+                    switchPanel('reader');
                     isRestoringState = false;
                     notifyParentReady();
                 } else {
