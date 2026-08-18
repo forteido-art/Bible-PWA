@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- PANEL_SCROLL_ARCH_V5: independent panel scrollers + scroll-keep (visibility) for reader/search -->
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
@@ -9,6 +11,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TKH Bible</title>
+    <script>
+    /* Early embed detect so first paint uses correct (zero) safe-area insets inside iframe */
+    (function(){try{if(window.self!==window.top)document.documentElement.classList.add('embedded');}catch(e){document.documentElement.classList.add('embedded');}})();
+    </script>
     <script src="lucide.min.js"></script>
     <script>if(typeof lucide === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@0.293.0/dist/umd/lucide.min.js"><\/script>'); }</script>
     <!-- jsPDF for notepad PDF export / share -->
@@ -45,7 +51,7 @@
 
         html {
             height: 100%;
-            height: 100dvh;
+            width: 100%;
             overflow: hidden;
         }
 
@@ -53,8 +59,7 @@
             background-color: var(--md-bg);
             color: var(--md-text-main);
             height: 100%;
-            height: 100dvh;
-            max-height: 100dvh;
+            width: 100%;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -62,6 +67,38 @@
             /* Prevent progressive layout drift offline / on resume */
             overscroll-behavior: none;
             -webkit-overflow-scrolling: touch;
+        }
+
+        /* Standalone (top-level window): use dynamic viewport units */
+        html:not(.embedded) {
+            height: 100dvh;
+            max-height: 100dvh;
+        }
+        html:not(.embedded) body {
+            height: 100dvh;
+            max-height: 100dvh;
+        }
+
+        /* Embedded in parent portal iframe: pin to the iframe box exactly.
+           Percentage heights are unreliable in srcdoc iframes; fixed inset is robust.
+           Parent already owns safe-area — zero insets so nothing is clipped or padded twice. */
+        html.embedded {
+            height: 100% !important;
+            max-height: none !important;
+            --safe-top: 0px;
+            --safe-bottom: 0px;
+        }
+        html.embedded body {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: none !important;
+            min-height: 0 !important;
+            margin: 0 !important;
         }
 
         /* Top Action Bar – fixed so transform truly leaves layout flow */
@@ -83,6 +120,7 @@
 
         header.hidden {
             transform: translateY(-100%);
+            pointer-events: none; /* never intercept taps while off-screen */
         }
 
         .header-left {
@@ -138,14 +176,15 @@
         /* Content Containers */
         main {
             flex: 1;
-            overflow-y: auto;
+            min-height: 0;
+            overflow: hidden; /* panels scroll themselves — keeps independent scroll positions */
             padding: var(--padding-base);
-            /* Account for fixed header + bottom nav + safe areas so content never drifts off-screen */
             padding-top: calc(var(--header-height) + var(--safe-top) + var(--padding-base));
             padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
             transition: padding-bottom 0.3s ease, padding-top 0.3s ease;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
+            display: flex;
+            flex-direction: column;
+            position: relative; /* contain absolute scroll-keep panels */
         }
 
         /* When bars are hidden, reduce reserved space so content fills the screen cleanly */
@@ -155,12 +194,39 @@
         }
 
         .view-panel {
-            display: none;
+            display: none; /* fallback */
+            flex: 1;
+            min-height: 0;
             height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
         }
 
+        /* Active panel: visible scroller */
         .view-panel.active {
             display: block;
+            visibility: visible;
+            position: relative;
+            pointer-events: auto;
+            z-index: 1;
+        }
+
+        /* Keep recently-used reader/search mounted off-flow so their scrollTop survives.
+           Other panels stay display:none (no scroll memory needed). */
+        .view-panel.scroll-keep {
+            display: block !important;
+            visibility: hidden;
+            position: absolute;
+            left: 0; right: 0; top: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .view-panel.scroll-keep.active {
+            visibility: visible;
+            position: relative;
+            pointer-events: auto;
+            z-index: 1;
         }
 
         /* Upload Layout Setup */
@@ -169,7 +235,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 80vh;
+            min-height: 60%;
+            height: 100%;
             text-align: center;
             padding: 24px;
         }
@@ -421,6 +488,23 @@
             margin-bottom: 16px;
         }
 
+        /* Fixed floating search input on Search panel – stays visible while results scroll under it */
+        #searchPanel.active .search-box {
+            position: fixed;
+            left: var(--padding-base);
+            right: var(--padding-base);
+            top: calc(var(--header-height) + var(--safe-top) + 12px);
+            z-index: 9;
+            margin-bottom: 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* When header auto-hides, float the search input up to the safe top edge */
+        main.bars-hidden #searchPanel.active .search-box {
+            top: calc(var(--safe-top) + 12px);
+        }
+
         .search-box input {
             background: none; border: none; outline: none;
             color: var(--md-text-main); font-size: 16px; flex: 1;
@@ -455,9 +539,21 @@
             font-size: 13px; color: var(--md-primary); font-weight: bold; margin-bottom: 4px;
         }
 
-        /* Ensure search results list itself has breathing room above the fixed bottom bar */
+        /* Slight highlight for matched search terms/phrases inside result verses */
+        .search-highlight {
+            background-color: rgba(241, 196, 15, 0.45);
+            color: #fff;
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        /* Ensure search results list itself has breathing room above the fixed bottom bar.
+           Extra top padding so content starts below the floating search input and can scroll under it. */
         #searchResults {
             padding-bottom: 16px;
+        }
+        #searchPanel.active #searchResults {
+            padding-top: 56px;
         }
 
         /* Settings view items */
@@ -635,14 +731,6 @@
         .note-topic-input::placeholder {
             color: var(--md-text-muted);
         }
-        /* View mode: topic reads as a static title */
-        .note-topic-input.view-mode {
-            background-color: transparent;
-            padding-left: 4px;
-            padding-right: 4px;
-            cursor: default;
-            pointer-events: none;
-        }
         .notepad-editor-actions {
             display: flex;
             gap: 4px;
@@ -684,12 +772,6 @@
         .note-body-textarea::placeholder {
             color: var(--md-text-muted);
         }
-        /* View mode: body is comfortable read-only text */
-        .note-body-textarea.view-mode {
-            background-color: transparent;
-            cursor: default;
-            caret-color: transparent;
-        }
         .notepad-editor-footer {
             display: flex;
             justify-content: space-between;
@@ -700,23 +782,6 @@
         .note-meta {
             font-size: 12px;
             color: var(--md-text-muted);
-        }
-        /* Edit note button (view mode) */
-        .notepad-edit-mode-btn {
-            background-color: var(--md-secondary-container);
-            color: var(--md-on-secondary-container);
-            border: none;
-            border-radius: 12px;
-            padding: 10px 18px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            gap: 6px;
-        }
-        .notepad-edit-mode-btn:active {
-            opacity: 0.85;
         }
 
         /* Bottom Nav Tab Bar with slide transition */
@@ -732,6 +797,7 @@
 
         .bottom-nav.hidden {
             transform: translateY(100%);
+            pointer-events: none; /* never intercept taps while off-screen (esp. last verses) */
         }
 
         .nav-item {
@@ -775,11 +841,11 @@
             </div>
         </div>
 
-        <div id="readerPanel" class="view-panel">
+        <div id="readerPanel" class="view-panel scroll-keep">
             <div id="bibleContent"></div>
         </div>
 
-        <div id="searchPanel" class="view-panel">
+        <div id="searchPanel" class="view-panel scroll-keep">
             <div class="search-box">
                 <i data-lucide="search" style="color: var(--md-text-muted);"></i>
                 <input type="text" id="searchInput" placeholder="Search keywords or phrases...">
@@ -824,9 +890,6 @@
                 <textarea id="noteBodyTextarea" class="note-body-textarea" placeholder="Start writing your note..."></textarea>
                 <div class="notepad-editor-footer">
                     <span id="noteMetaInfo" class="note-meta"></span>
-                    <button id="btnEditNote" class="notepad-edit-mode-btn" title="Edit note">
-                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i> Edit
-                    </button>
                     <button id="btnSaveNote" class="md-btn-fab" style="margin-top: 0; padding: 10px 20px;">
                         <i data-lucide="check" style="width: 16px; height: 16px;"></i> Save
                     </button>
@@ -954,6 +1017,26 @@
     </nav>
 
     <script>
+        // Detect iframe embedding (parent Media Portal) so layout fills the frame exactly
+        (function detectEmbed() {
+            try {
+                if (window.self !== window.top) {
+                    document.documentElement.classList.add('embedded');
+                }
+            } catch (e) {
+                // Cross-origin access blocked → treat as embedded
+                document.documentElement.classList.add('embedded');
+            }
+        })();
+
+        function notifyParentReady() {
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'BIBLE_READY' }, '*');
+                }
+            } catch (_) {}
+        }
+
         let bibleData = null;
         let selectedVerseKey = null; 
         let highlights = JSON.parse(localStorage.getItem('bible_highlights') || '{}');
@@ -988,6 +1071,12 @@
         const bottomNav = document.getElementById('bottomNav');
         const mainContentPanel = document.getElementById('mainContentPanel');
 
+        // Each view-panel is its own scroll container (main no longer scrolls).
+        // This preserves Search/Reader scroll positions natively across tab switches.
+        function getScrollEl() {
+            return document.querySelector('.view-panel.active') || mainContentPanel;
+        }
+
         const multiSelectBar = document.getElementById('multiSelectBar');
         const multiSelectCounter = document.getElementById('multiSelectCounter');
         const cancelMultiSelectBtn = document.getElementById('cancelMultiSelectBtn');
@@ -1008,15 +1097,21 @@
         let lastScrollTop = 0;
         let barsHidden = false;
 
-        // Persist current reading position (book, chapter, scroll, panel)
+        // Persist reading position. Each panel scrolls independently, so we only
+        // need to remember positions for cold-start restore / clear-input reset.
         function saveReadingState() {
+            const activeId = document.querySelector('.view-panel.active')?.id || '';
+            const activePanel = activeId.replace('Panel', '') || 'reader';
+            const el = getScrollEl();
+            const currentScroll = el.scrollTop || 0;
             const state = {
                 bookIdx: bibleData ? (parseInt(bookSelect.value) || 0) : 0,
                 chapterIdx: bibleData ? (parseInt(chapterSelect.value) || 0) : 0,
-                scrollTop: mainContentPanel.scrollTop || 0,
-                panel: document.querySelector('.view-panel.active')?.id?.replace('Panel', '') || 'reader'
+                scrollTop: (activePanel === 'reader' || activePanel === 'upload') ? currentScroll : (readingState.scrollTop || 0),
+                searchScrollTop: (activePanel === 'search') ? currentScroll : (readingState.searchScrollTop || 0),
+                // Never persist 'search' as the startup panel
+                panel: (activePanel === 'search') ? 'reader' : activePanel
             };
-            // Normalize panel id
             if (state.panel === 'howTo') state.panel = 'guide';
             if (state.panel === 'upload') state.panel = 'reader';
             if (state.panel === 'notepad') state.panel = 'notepad';
@@ -1034,42 +1129,85 @@
             }, 250);
         }
 
-        // Scroll listener for auto-hiding top & bottom bars + position memory
-        mainContentPanel.addEventListener('scroll', () => {
-            // Only auto-hide when viewing the reader panel and not in multi-selection mode
-            if (!document.getElementById('readerPanel').classList.contains('active') || isMultiSelectMode) {
+        // While true, ignore scroll-driven hideBars (set during showBars so
+        // layout/scroll adjust after revealing bars cannot immediately re-hide them).
+        let barsRevealLock = false;
+        let barsRevealLockTimer = null;
+
+        // Scroll events don't bubble — listen on each panel that scrolls
+        function onPanelScroll(e) {
+            const el = e.currentTarget;
+            if (!el.classList.contains('active')) return;
+            const onReader = el.id === 'readerPanel';
+            const onSearch = el.id === 'searchPanel';
+            if ((!onReader && !onSearch) || isMultiSelectMode) {
                 scheduleScrollSave();
                 return;
             }
-
-            let scrollTop = mainContentPanel.scrollTop;
-            if (scrollTop > lastScrollTop && scrollTop > 50) {
-                // Scroll Down - Hide Bars
+            const scrollTop = el.scrollTop || 0;
+            // Never auto-hide while a tap-to-reveal is settling (prevents shake at last verse)
+            if (!barsRevealLock && scrollTop > lastScrollTop && scrollTop > 50) {
                 hideBars();
             }
             lastScrollTop = scrollTop;
             scheduleScrollSave();
+        }
+        ['readerPanel', 'searchPanel', 'notepadPanel', 'settingsPanel', 'howToPanel', 'uploadPanel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('scroll', onPanelScroll, { passive: true });
         });
 
-        // Tap on screen to reveal hidden bars
+        // Unified tap-to-reveal: works on click (desktop) and pure touch taps (mobile).
+        // Independent panel scrollers + reduced padding when bars are hidden mean
+        // last-verse taps need an explicit scroll adjust after the footer returns.
+        // Do NOT reveal on finger-lift after a scroll gesture.
+        let _tapTouchMoved = false;
+        let _tapTouchStartY = 0;
+        document.addEventListener('touchstart', (e) => {
+            _tapTouchMoved = false;
+            if (e.touches && e.touches[0]) _tapTouchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        document.addEventListener('touchmove', (e) => {
+            if (!e.touches || !e.touches[0]) return;
+            if (Math.abs(e.touches[0].clientY - _tapTouchStartY) > 10) {
+                _tapTouchMoved = true;
+            }
+        }, { passive: true });
+
+        function shouldIgnoreBarRevealTap(target) {
+            if (!target) return true;
+            if (optionsMenu.classList.contains('show') ||
+                notepadModal.classList.contains('show') ||
+                isMultiSelectMode) return true;
+            if (target.closest('.md-select') ||
+                target.closest('.context-menu') ||
+                target.closest('.bottom-nav') ||
+                target.closest('.btn-donate') ||
+                target.closest('.verse-num') ||
+                target.closest('.multi-select-bar') ||
+                target.closest('.notepad-modal')) return true;
+            return false;
+        }
+
+        function revealBarsFromTap(target) {
+            if (!barsHidden) return;
+            if (shouldIgnoreBarRevealTap(target)) return;
+            const verseEl = target && target.closest ? target.closest('.verse-layout') : null;
+            showBars(verseEl || null);
+        }
+
         document.addEventListener('click', (e) => {
-            // Check if clicking inside context menus, select menus, or target verse interactions
-            if (optionsMenu.classList.contains('show') || 
-                notepadModal.classList.contains('show') || 
-                isMultiSelectMode ||
-                e.target.closest('.md-select') || 
-                e.target.closest('.context-menu') || 
-                e.target.closest('.bottom-nav') ||
-                e.target.closest('.btn-donate') ||
-                e.target.closest('.verse-num')) {
-                return;
-            }
-            
-            // If the bars are hidden, show them on a single tap
-            if (barsHidden) {
-                showBars();
-            }
+            revealBarsFromTap(e.target);
         });
+
+        // Mobile: after a pure tap (no scroll), reveal bars. Skip if finger moved (scroll).
+        document.addEventListener('touchend', (e) => {
+            if (!barsHidden || _tapTouchMoved) return;
+            if (!e.changedTouches || e.changedTouches.length === 0) return;
+            const t = e.changedTouches[0];
+            const el = document.elementFromPoint(t.clientX, t.clientY) || e.target;
+            revealBarsFromTap(el);
+        }, { passive: true });
 
         function hideBars() {
             if (barsHidden) return;
@@ -1082,14 +1220,60 @@
             barsHidden = true;
         }
 
-        function showBars() {
+        function showBars(anchorVerseEl) {
             if (!barsHidden) return;
+
+            // Lock out scroll-driven hideBars while padding/scroll settle (stops shake at last verse)
+            barsRevealLock = true;
+            if (barsRevealLockTimer) clearTimeout(barsRevealLockTimer);
+            barsRevealLockTimer = setTimeout(() => {
+                barsRevealLock = false;
+                barsRevealLockTimer = null;
+            }, 400);
+
+            // Capture active panel scroll metrics *before* padding changes
+            const sc = getScrollEl();
+            let prevScrollTop = 0;
+            let prevDistFromBottom = 0;
+            let wasAtBottom = false;
+            if (sc) {
+                prevScrollTop = sc.scrollTop || 0;
+                const prevMax = Math.max(0, sc.scrollHeight - sc.clientHeight);
+                prevDistFromBottom = Math.max(0, prevMax - prevScrollTop);
+                wasAtBottom = prevDistFromBottom <= 2 || prevScrollTop >= prevMax - 2;
+            }
+
             appHeader.classList.remove('hidden');
             bottomNav.classList.remove('hidden');
             mainContentPanel.classList.remove('bars-hidden');
             mainContentPanel.style.paddingBottom = '';
             mainContentPanel.style.paddingTop = '';
             barsHidden = false;
+
+            // After layout reflow (padding restored), keep last/tapped verse visible above footer.
+            // Use instant scroll (not smooth) so we don't generate intermediate scroll events.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const el = getScrollEl();
+                    if (!el) return;
+
+                    const newMax = Math.max(0, el.scrollHeight - el.clientHeight);
+
+                    if (anchorVerseEl && document.contains(anchorVerseEl)) {
+                        // Instant — avoid smooth animation that re-triggers hideBars mid-flight
+                        anchorVerseEl.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+                        // If still past the new bottom (padding ate space), clamp
+                        if (el.scrollTop > newMax) el.scrollTop = newMax;
+                    } else if (wasAtBottom) {
+                        // Absolute last verse: pin to new bottom after padding returned
+                        el.scrollTop = newMax;
+                    } else {
+                        el.scrollTop = Math.max(0, Math.min(newMax, newMax - prevDistFromBottom));
+                    }
+                    // Sync so the next real user scroll isn't treated as a "down" continuation
+                    lastScrollTop = el.scrollTop || 0;
+                });
+            });
         }
 
         // Native System Caching Pipeline 
@@ -1136,10 +1320,11 @@
                     }
                     await saveToDB(bibleData);
                     // New translation – start from beginning
-                    readingState = { bookIdx: 0, chapterIdx: 0, scrollTop: 0, panel: 'reader' };
+                    readingState = { bookIdx: 0, chapterIdx: 0, scrollTop: 0, searchScrollTop: 0, panel: 'reader' };
                     localStorage.setItem('bible_reading_state', JSON.stringify(readingState));
                     switchPanel('reader');
                     initPresentationEngine();
+                    notifyParentReady();
                 } catch(err) {
                     alert("Invalid Bible JSON formatting template structure configuration.");
                 }
@@ -1226,7 +1411,8 @@
 
             // Only force top when user actively changes chapter; preserve scroll on restore
             if (!isRestoringState) {
-                mainContentPanel.scrollTop = 0;
+                const sc = document.getElementById('readerPanel') || mainContentPanel;
+                sc.scrollTop = 0;
             }
 
             verses.forEach((vText, i) => {
@@ -1322,6 +1508,10 @@
                     }
                     
                     if (!isLongPress) {
+                        // Reveal header/footer on pure short tap (not after a scroll gesture)
+                        if (barsHidden && !_tapTouchMoved) {
+                            showBars(div);
+                        }
                         // If the verse has a note, tapping it instantly opens the reader modal 
                         if (notes[key]) {
                             openNotepad(key, false); // Open in read-only / view-only mode first
@@ -1354,10 +1544,10 @@
 
             // Restore exact scroll position after DOM is ready (background / sleep resume)
             if (isRestoringState && typeof readingState.scrollTop === 'number' && readingState.scrollTop > 0) {
-                // Double rAF ensures layout is complete before applying scroll
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
-                        mainContentPanel.scrollTop = readingState.scrollTop;
+                        const sc = document.getElementById('readerPanel') || mainContentPanel;
+                        sc.scrollTop = readingState.scrollTop;
                         lastScrollTop = readingState.scrollTop;
                     });
                 });
@@ -1641,24 +1831,22 @@
             if (isMultiSelectMode) {
                 stopMultiSelectMode();
             }
+            // Panels keep their own scrollTop (each is an independent overflow container).
+            // No save/restore needed on switch — browser preserves it while display:none.
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             hideOptionsMenu();
-            showBars(); // Reset bar hidden status during tab switches
+            showBars();
 
-            // Notepad is always available (independent of Bible data)
             if (panelId === 'notepad') {
                 document.getElementById('notepadPanel').classList.add('active');
                 document.getElementById('tabNotepad').classList.add('active');
                 headerDropdowns.style.display = "none";
                 appTitle.style.display = "block";
                 appTitle.textContent = "Notepad";
-                // Always show list view when entering the tab
                 showNotepadListView();
                 renderJotterNotesList();
-                if (!isRestoringState) {
-                    saveReadingState();
-                }
+                if (!isRestoringState) saveReadingState();
                 return;
             }
 
@@ -1676,11 +1864,17 @@
                 headerDropdowns.style.display = "flex";
                 appTitle.style.display = "none";
             } else if (panelId === 'search') {
-                document.getElementById('searchPanel').classList.add('active');
+                const searchPanel = document.getElementById('searchPanel');
+                searchPanel.classList.add('active');
                 document.getElementById('tabSearch').classList.add('active');
                 headerDropdowns.style.display = "none";
                 appTitle.style.display = "block";
                 appTitle.textContent = "Search Content";
+                // Only force top when search input was cleared by the user
+                if (searchInput.value.trim().length === 0) {
+                    searchPanel.scrollTop = 0;
+                    lastScrollTop = 0;
+                }
             } else if (panelId === 'settings') {
                 document.getElementById('settingsPanel').classList.add('active');
                 document.getElementById('tabSettings').classList.add('active');
@@ -1695,10 +1889,7 @@
                 appTitle.textContent = "Guide";
             }
 
-            // Persist active panel so resume returns to the same view
-            if (!isRestoringState) {
-                saveReadingState();
-            }
+            if (!isRestoringState) saveReadingState();
         }
 
         // Navigation Bindings
@@ -1722,7 +1913,6 @@
         const btnNewNote = document.getElementById('btnNewNote');
         const btnBackToNoteList = document.getElementById('btnBackToNoteList');
         const btnSaveNote = document.getElementById('btnSaveNote');
-        const btnEditNote = document.getElementById('btnEditNote');
         const btnDeleteNote = document.getElementById('btnDeleteNote');
         const btnShareNotePdf = document.getElementById('btnShareNotePdf');
 
@@ -1749,32 +1939,6 @@
         function showNotepadEditorView() {
             notepadListView.style.display = 'none';
             notepadEditorView.style.display = 'flex';
-        }
-
-        /** Enter comfortable read-only viewing mode for the current note */
-        function enterJotterViewMode() {
-            isJotterEditing = false;
-            noteTopicInput.readOnly = true;
-            noteBodyTextarea.readOnly = true;
-            noteTopicInput.classList.add('view-mode');
-            noteBodyTextarea.classList.add('view-mode');
-            btnSaveNote.style.display = 'none';
-            btnEditNote.style.display = 'flex';
-            noteTopicInput.blur();
-            noteBodyTextarea.blur();
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        /** Enter editable mode for the current note */
-        function enterJotterEditMode() {
-            isJotterEditing = true;
-            noteTopicInput.readOnly = false;
-            noteBodyTextarea.readOnly = false;
-            noteTopicInput.classList.remove('view-mode');
-            noteBodyTextarea.classList.remove('view-mode');
-            btnSaveNote.style.display = 'inline-flex';
-            btnEditNote.style.display = 'none';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function renderJotterNotesList() {
@@ -1813,12 +1977,13 @@
             const note = jotterNotes.find(n => n.id === id);
             if (!note) return;
             activeJotterNoteId = id;
+            isJotterEditing = true;
             noteTopicInput.value = note.topic || '';
             noteBodyTextarea.value = note.body || '';
             noteMetaInfo.textContent = 'Updated ' + formatNoteDate(note.updated || note.created);
             showNotepadEditorView();
-            // Existing notes open in comfortable view mode (edit functions off)
-            enterJotterViewMode();
+            // Focus body for quick edit
+            setTimeout(() => noteBodyTextarea.focus(), 100);
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
@@ -1829,18 +1994,17 @@
             jotterNotes.push(note);
             saveJotterNotes();
             activeJotterNoteId = id;
+            isJotterEditing = true;
             noteTopicInput.value = '';
             noteBodyTextarea.value = '';
             noteMetaInfo.textContent = 'New note · ' + formatNoteDate(now);
             showNotepadEditorView();
-            // New notes start in edit mode
-            enterJotterEditMode();
             setTimeout(() => noteTopicInput.focus(), 100);
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function saveCurrentJotterNote() {
-            if (!activeJotterNoteId || !isJotterEditing) return;
+            if (!activeJotterNoteId) return;
             const note = jotterNotes.find(n => n.id === activeJotterNoteId);
             if (!note) return;
             note.topic = noteTopicInput.value.trim() || 'Untitled';
@@ -1948,8 +2112,8 @@
         // Bind notepad controls
         btnNewNote.onclick = createNewJotterNote;
         btnBackToNoteList.onclick = () => {
-            // Auto-save on back only when in edit mode and content exists
-            if (activeJotterNoteId && isJotterEditing) {
+            // Auto-save on back if content exists
+            if (activeJotterNoteId) {
                 const note = jotterNotes.find(n => n.id === activeJotterNoteId);
                 if (note) {
                     const topic = noteTopicInput.value.trim();
@@ -1970,17 +2134,13 @@
             renderJotterNotesList();
         };
         btnSaveNote.onclick = saveCurrentJotterNote;
-        btnEditNote.onclick = () => {
-            enterJotterEditMode();
-            setTimeout(() => noteBodyTextarea.focus(), 100);
-        };
         btnDeleteNote.onclick = deleteCurrentJotterNote;
         btnShareNotePdf.onclick = shareNoteAsPdf;
 
-        // Autosave while typing (debounced) — only when editing
+        // Autosave while typing (debounced)
         let jotterSaveTimer = null;
         function scheduleJotterAutosave() {
-            if (!activeJotterNoteId || !isJotterEditing) return;
+            if (!activeJotterNoteId) return;
             if (jotterSaveTimer) clearTimeout(jotterSaveTimer);
             jotterSaveTimer = setTimeout(() => {
                 saveCurrentJotterNote();
@@ -1992,28 +2152,52 @@
         // Text Search Module Implementation
         const btnSearchExecute = document.getElementById('btnSearchExecute');
 
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function buildWholeWordPhraseRegex(query) {
+            // Match full words or the entire phrase (consecutive words), case-insensitive.
+            // Word boundaries prevent partial-word matches (e.g. "the" will not match "there").
+            const escaped = escapeRegExp(query.trim());
+            const patternBody = escaped.replace(/\s+/g, '\\s+');
+            return new RegExp('\\b' + patternBody + '\\b', 'gi');
+        }
+
+        function highlightSearchMatches(text, regex) {
+            // Fresh regex instance so lastIndex from .test() does not interfere
+            const re = new RegExp(regex.source, regex.flags);
+            return text.replace(re, (match) => `<span class="search-highlight">${match}</span>`);
+        }
+
         function performSearch() {
-            const query = searchInput.value.toLowerCase().trim();
+            const rawQuery = searchInput.value.trim();
             searchResults.innerHTML = "";
-            if (query.length < 3) {
+            if (rawQuery.length < 3) {
                 showToast("Enter at least 3 characters");
                 return;
             }
             if (!bibleData) return;
 
+            const matchRegex = buildWholeWordPhraseRegex(rawQuery);
             const resultsFragment = document.createDocumentFragment();
 
             bibleData.forEach((book, bIdx) => {
                 book.chapters.forEach((chapter, cIdx) => {
                     chapter.forEach((verseText, vIdx) => {
-                        if (verseText.toLowerCase().includes(query)) {
+                        // Test against original verse text (regex is case-insensitive)
+                        if (matchRegex.test(verseText)) {
+                            // Reset lastIndex after .test() so subsequent uses start from beginning
+                            matchRegex.lastIndex = 0;
+
                             let cleanText = verseText.replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "");
+                            const highlightedText = highlightSearchMatches(cleanText, matchRegex);
                             
                             const div = document.createElement('div');
                             div.className = "search-result-item";
                             div.innerHTML = `
                                 <div class="search-result-title">${book.name} ${cIdx + 1}:${vIdx + 1}</div>
-                                <div style="font-size: 15px; line-height: 1.5;">${cleanText}</div>
+                                <div style="font-size: 15px; line-height: 1.5;">${highlightedText}</div>
                             `;
                             
                             div.onclick = () => {
@@ -2044,6 +2228,15 @@
 
             searchResults.appendChild(resultsFragment);
 
+            // New search results always start at the top
+            const sp = document.getElementById('searchPanel');
+            if (sp) sp.scrollTop = 0;
+            lastScrollTop = 0;
+            readingState.searchScrollTop = 0;
+            try {
+                localStorage.setItem('bible_reading_state', JSON.stringify(readingState));
+            } catch (e) { /* ignore */ }
+
             if (searchResults.children.length === 0) {
                 showToast("No matches found");
             }
@@ -2057,6 +2250,21 @@
                 searchInput.blur(); // Dismisses mobile keyboard layout
             }
         };
+
+        // Cleared search input → reset search panel scroll (next visit starts at top)
+        searchInput.addEventListener('input', () => {
+            if (searchInput.value.trim() === '') {
+                readingState.searchScrollTop = 0;
+                try {
+                    localStorage.setItem('bible_reading_state', JSON.stringify(readingState));
+                } catch (e) { /* ignore */ }
+                const sp = document.getElementById('searchPanel');
+                if (sp) {
+                    sp.scrollTop = 0;
+                    lastScrollTop = 0;
+                }
+            }
+        });
 
         // Data Management Workflows
         document.getElementById('btnClearData').onclick = async () => {
@@ -2092,11 +2300,13 @@
                     bibleData = cachedData;
                     isRestoringState = true;
                     initPresentationEngine(); // restores book + chapter + scroll
-                    // Restore last active panel (reader / search / settings / guide / notepad)
-                    const panelToRestore = (readingState.panel === 'search' || readingState.panel === 'settings' || readingState.panel === 'guide' || readingState.panel === 'notepad')
+                    // Restore last active panel. Search is intentionally excluded so the
+                    // default/startup view is always the Bible reader (or notepad/settings/guide).
+                    const panelToRestore = (readingState.panel === 'settings' || readingState.panel === 'guide' || readingState.panel === 'notepad')
                         ? readingState.panel : 'reader';
                     switchPanel(panelToRestore);
                     isRestoringState = false;
+                    notifyParentReady();
                     return;
                 }
                 
@@ -2121,17 +2331,21 @@
                     await saveToDB(bibleData);
                     isRestoringState = true;
                     initPresentationEngine();
-                    const panelToRestore = (readingState.panel === 'search' || readingState.panel === 'settings' || readingState.panel === 'guide' || readingState.panel === 'notepad')
+                    // Search is intentionally excluded so startup view is always the Bible reader
+                    const panelToRestore = (readingState.panel === 'settings' || readingState.panel === 'guide' || readingState.panel === 'notepad')
                         ? readingState.panel : 'reader';
                     switchPanel(panelToRestore);
                     isRestoringState = false;
+                    notifyParentReady();
                 } else {
                     // Fallback to upload panel if kjv.json isn't bundled
                     switchPanel('upload');
+                    notifyParentReady();
                 }
             } catch (err) {
                 console.log("Could not auto-load bundled KJV, showing manual upload instead.");
                 switchPanel('upload');
+                notifyParentReady();
             }
         });
 
@@ -2147,11 +2361,16 @@
         document.addEventListener('freeze', saveReadingState);
     </script>
 <script>
-// Register service worker for install
-if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-  .then(() => console.log("SW Registered"));
-}
+// Register service worker only when running as top-level document (not inside parent iframe)
+(function () {
+  try {
+    if (window.self !== window.top) return; // embedded — parent app owns the SW
+  } catch (_) { return; }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log("SW Registered"));
+  }
+})();
 </script>
 </body>
 </html>
