@@ -879,6 +879,9 @@
                     </button>
                     <input type="text" id="noteTopicInput" class="note-topic-input" placeholder="Topic / Title" maxlength="120">
                     <div class="notepad-editor-actions">
+                        <button id="btnEditNote" class="notepad-action-btn" title="Edit note" style="display: none;">
+                            <i data-lucide="pencil" style="width: 18px; height: 18px;"></i>
+                        </button>
                         <button id="btnShareNotePdf" class="notepad-action-btn" title="Share as PDF">
                             <i data-lucide="file-down" style="width: 18px; height: 18px;"></i>
                         </button>
@@ -1915,6 +1918,7 @@
         const btnSaveNote = document.getElementById('btnSaveNote');
         const btnDeleteNote = document.getElementById('btnDeleteNote');
         const btnShareNotePdf = document.getElementById('btnShareNotePdf');
+        const btnEditNote = document.getElementById('btnEditNote');
 
         function saveJotterNotes() {
             try {
@@ -1973,17 +1977,31 @@
                 .replace(/"/g, '&quot;');
         }
 
+        function setJotterViewMode() {
+            isJotterEditing = false;
+            noteTopicInput.readOnly = true;
+            noteBodyTextarea.readOnly = true;
+            if (btnEditNote) btnEditNote.style.display = 'flex';
+            if (btnSaveNote) btnSaveNote.style.display = 'none';
+        }
+
+        function setJotterEditMode() {
+            isJotterEditing = true;
+            noteTopicInput.readOnly = false;
+            noteBodyTextarea.readOnly = false;
+            if (btnEditNote) btnEditNote.style.display = 'none';
+            if (btnSaveNote) btnSaveNote.style.display = '';
+        }
+
         function openJotterNote(id) {
             const note = jotterNotes.find(n => n.id === id);
             if (!note) return;
             activeJotterNoteId = id;
-            isJotterEditing = true;
             noteTopicInput.value = note.topic || '';
             noteBodyTextarea.value = note.body || '';
             noteMetaInfo.textContent = 'Updated ' + formatNoteDate(note.updated || note.created);
             showNotepadEditorView();
-            // Focus body for quick edit
-            setTimeout(() => noteBodyTextarea.focus(), 100);
+            setJotterViewMode();
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
@@ -1994,11 +2012,11 @@
             jotterNotes.push(note);
             saveJotterNotes();
             activeJotterNoteId = id;
-            isJotterEditing = true;
             noteTopicInput.value = '';
             noteBodyTextarea.value = '';
             noteMetaInfo.textContent = 'New note · ' + formatNoteDate(now);
             showNotepadEditorView();
+            setJotterEditMode();
             setTimeout(() => noteTopicInput.focus(), 100);
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
@@ -2112,8 +2130,8 @@
         // Bind notepad controls
         btnNewNote.onclick = createNewJotterNote;
         btnBackToNoteList.onclick = () => {
-            // Auto-save on back if content exists
-            if (activeJotterNoteId) {
+            // Auto-save on back only when in edit mode (view mode has no changes)
+            if (activeJotterNoteId && isJotterEditing) {
                 const note = jotterNotes.find(n => n.id === activeJotterNoteId);
                 if (note) {
                     const topic = noteTopicInput.value.trim();
@@ -2136,11 +2154,18 @@
         btnSaveNote.onclick = saveCurrentJotterNote;
         btnDeleteNote.onclick = deleteCurrentJotterNote;
         btnShareNotePdf.onclick = shareNoteAsPdf;
+        if (btnEditNote) {
+            btnEditNote.onclick = () => {
+                setJotterEditMode();
+                setTimeout(() => noteBodyTextarea.focus(), 100);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            };
+        }
 
-        // Autosave while typing (debounced)
+        // Autosave while typing (debounced) — only in edit mode
         let jotterSaveTimer = null;
         function scheduleJotterAutosave() {
-            if (!activeJotterNoteId) return;
+            if (!activeJotterNoteId || !isJotterEditing) return;
             if (jotterSaveTimer) clearTimeout(jotterSaveTimer);
             jotterSaveTimer = setTimeout(() => {
                 saveCurrentJotterNote();
