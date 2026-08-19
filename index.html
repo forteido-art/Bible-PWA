@@ -1118,23 +1118,82 @@
             <div class="guide-container">
                 <h3 style="margin-bottom: 12px;">App Instructions</h3>
                 <hr style="border: 0; border-top: 1px solid var(--md-surface-variant); margin-bottom: 16px;">
-                
-                <h4>📚 Quick Verse Copy</h4>
-                <p>Simply tap directly on any <strong>verse number</strong> to copy its contents alongside the Book, Chapter, and Verse reference to your clipboard instantly.</p>
 
-                <h4>⚙️ Long Press Menu Features</h4>
-                <p>Press and hold on the body text of any verse to reveal advanced contextual actions:</p>
+                <h4>🚀 Getting Started</h4>
+                <p>When you first open the app, it tries to load a bundled Bible translation automatically. If none is found, you will see an upload screen.</p>
                 <ul>
-                    <li><strong>Multi-verse copy</strong>: Select and copy multiple verses at once. Tapped verses will be appended together under a unified book and chapter header reference.</li>
-                    <li><strong>Highlight text</strong>: Cycle through colorful background highlight markers.</li>
-                    <li><strong>Underline verse</strong>: Underline key study materials directly in real-time.</li>
-                    <li><strong>Add / Edit Notes</strong>: Open an automatic draft notepad drawer to link local reflections. Tapping a verse that has a note icon on it will instantly view your note.</li>
-                    <li><strong>Search Dictionary</strong>: Link the verse to external language studies via external references.</li>
-                    <li><strong>Cross references</strong>: View related parallel verses (OpenBible data). <em>Tap</em> a result to expand or collapse the full verse text in place. <em>Double-tap</em> to open that passage in the reader. <em>Long-press</em> to copy a single full verse. Use the multi-select (copy-check) icon to select several results and copy them together. The sticky-note icon opens My Notes without leaving the sheet first.</li>
+                    <li>Tap <strong>Choose JSON File</strong> and select a valid Bible JSON (structured books → chapters → verses, or a flat list of verses). The file is stored locally so it loads instantly next time.</li>
+                    <li>Once loaded, the <strong>Read</strong> tab becomes your main reading view. Book and chapter dropdowns appear in the header.</li>
+                    <li>Your last book, chapter, and scroll position are remembered automatically—even after closing the app or putting the device to sleep.</li>
                 </ul>
 
-                <h4>🔍 Global Index Search</h4>
-                <p>Toggle the Search icon in your navigation deck to query matching occurrences instantly across the entire Bible library.</p>
+                <h4>📖 Reading the Bible</h4>
+                <p>The reader shows one chapter at a time with clear verse numbers and readable text.</p>
+                <ul>
+                    <li><strong>Book &amp; chapter selectors</strong> — Use the two pills in the top bar to jump to any book or chapter.</li>
+                    <li><strong>Swipe to change chapter</strong> — On the reading screen, swipe left to go to the next chapter, or swipe right to go to the previous chapter. Swipes work across book boundaries (last chapter of a book → first of the next, and vice versa). At the very beginning or end of the Bible you will see a short toast message.</li>
+                    <li><strong>Auto-hiding bars</strong> — Scroll down and the header and bottom navigation slide away so you get a full-screen reading experience. Tap once anywhere on the page (or on a verse) to bring them back. The last verse you were looking at stays visible.</li>
+                    <li><strong>Tap a verse that already has a note</strong> — Opens that note in a quick view drawer so you can read your reflection without hunting for it.</li>
+                </ul>
+
+                <h4>📋 Quick Verse Copy</h4>
+                <p>Tap directly on any <strong>verse number</strong> (the small blue number at the start of the verse). The full reference and text (e.g. “John 3:16 – For God so loved…”) is copied to your clipboard instantly, and a toast confirms the copy.</p>
+
+                <h4>⚙️ Long-Press Menu (Verse Actions)</h4>
+                <p>Press and hold on the <em>body text</em> of any verse (not the number). After a short moment the verse highlights and a bottom action sheet appears with these options:</p>
+                <ul>
+                    <li><strong>Multi-verse copy</strong> — Enters selection mode. Tap any verses you want (they highlight). Use the bottom bar to Copy Selected or Cancel. Copied text is neatly grouped by book and chapter with smart ranges (e.g. “Genesis 1:1-5, 8”).</li>
+                    <li><strong>Add note / Edit note</strong> — Opens a notepad drawer linked to that exact verse. Type freely; notes autosave. Verses that have a note get a subtle left border so you can spot them later. Tapping a noted verse opens the note in view mode; use Edit to change it.</li>
+                    <li><strong>Highlight text</strong> — Cycles through yellow → green → blue → pink → none. Highlights are saved and restored every time you open that chapter.</li>
+                    <li><strong>Underline verse</strong> — Toggles a clear underline on the verse for quick visual emphasis. Also saved permanently.</li>
+                    <li><strong>Search dictionary</strong> — Opens an external dictionary / study resource in a new browser tab so you can look up words or the passage.</li>
+                    <li><strong>Cross references</strong> — Opens a bottom sheet of related verses (OpenBible data). See the dedicated section below for full details.</li>
+                </ul>
+                <p>Tap outside the menu or tap the same verse again to dismiss it.</p>
+
+                <h4>🔗 Cross References</h4>
+                <p>From the long-press menu choose <strong>Cross references</strong>. A sheet lists parallel and related verses ranked by strength (stars).</p>
+                <ul>
+                    <li><strong>Single tap</strong> a result — Expands or collapses the full verse text in place so you can read it without leaving the list.</li>
+                    <li><strong>Double-tap</strong> a result — Jumps straight to that verse in the main reader and briefly highlights it.</li>
+                    <li><strong>Long-press</strong> a result — Copies that single verse (reference + text) to the clipboard.</li>
+                    <li><strong>Multi-select icon</strong> (copy-check) at the top — Lets you select several cross-references and copy them all at once. A footer shows the count and Copy / Cancel buttons.</li>
+                    <li><strong>Sticky-note icon</strong> — Opens the independent Notepad tab without closing the sheet first.</li>
+                    <li>Close the sheet with the X or by tapping the dimmed area outside it.</li>
+                </ul>
+
+                <h4>🔍 Search</h4>
+                <p>Switch to the <strong>Search</strong> tab at the bottom.</p>
+                <ul>
+                    <li>Type a word or phrase (at least 3 characters) and tap Search or press Enter.</li>
+                    <li>Results show every matching verse across the whole Bible. Matching words are highlighted in yellow inside the preview.</li>
+                    <li>Tap any result to jump to that exact verse in the reader; the verse is briefly highlighted so you can find it easily.</li>
+                    <li>The search box stays fixed at the top while you scroll results. Clearing the search box resets the scroll position for next time.</li>
+                </ul>
+
+                <h4>📝 Notepad (Independent Notes)</h4>
+                <p>The <strong>Notepad</strong> tab is a free-form jotter separate from verse-linked notes.</p>
+                <ul>
+                    <li><strong>New Note</strong> — Creates a blank note with a title field and body. Notes autosave while you type (when in edit mode).</li>
+                    <li>Tap a card in the list to open it in view mode. Use the pencil icon to edit, the trash icon to delete (with confirmation), or the PDF icon to export / share.</li>
+                    <li><strong>Share as PDF</strong> — Generates a clean PDF of the note. On supported devices the system share sheet appears so you can send it; otherwise the file downloads.</li>
+                    <li>Empty new notes that you never typed in are discarded automatically when you go back to the list.</li>
+                    <li>All notepad entries are stored on your device and survive app restarts.</li>
+                </ul>
+
+                <h4>⚙️ Settings</h4>
+                <ul>
+                    <li><strong>How to Use App Functions</strong> — Opens this guide (you are here). Use the back link at the top to return to Settings.</li>
+                    <li><strong>Clear Database</strong> — Permanently removes the loaded Bible translation and resets highlights, verse notes, underlines, and reading position. You will need to load a JSON file again (or let the app try the bundled file). Use this when you want to switch to a different translation.</li>
+                </ul>
+
+                <h4>💡 Tips &amp; Little Details</h4>
+                <ul>
+                    <li>Everything important (highlights, underlines, verse notes, independent notepad entries, last reading place) is saved locally on your device—no account required.</li>
+                    <li>The green <strong>Donate</strong> button in the header opens a support page in your browser if you wish to contribute.</li>
+                    <li>When the app is embedded inside another portal, layout automatically adjusts so nothing is clipped.</li>
+                    <li>If cross-reference data is missing (offline or not bundled), the sheet will simply say the data is unavailable; the rest of the app continues to work normally.</li>
+                </ul>
             </div>
         </div>
     </main>
@@ -1394,6 +1453,93 @@
             if (el) el.addEventListener('scroll', onPanelScroll, { passive: true });
         });
 
+        // ========== Swipe left/right on reader to change chapter ==========
+        // Swipe left (finger moves left) → next chapter; swipe right → previous chapter.
+        // Only triggers on predominantly horizontal, quick gestures so vertical scroll and
+        // long-press / multi-select remain unaffected.
+        let _swipeStartX = 0;
+        let _swipeStartY = 0;
+        let _swipeStartTime = 0;
+        let _swipeActive = false;
+
+        function onReaderSwipeStart(e) {
+            if (!bibleData || isMultiSelectMode) return;
+            const reader = document.getElementById('readerPanel');
+            if (!reader || !reader.classList.contains('active')) return;
+            // Ignore if a modal/menu is open
+            if (optionsMenu.classList.contains('show') ||
+                notepadModal.classList.contains('show') ||
+                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show'))) {
+                return;
+            }
+            const t = (e.touches && e.touches[0]) || e;
+            _swipeStartX = t.clientX;
+            _swipeStartY = t.clientY;
+            _swipeStartTime = Date.now();
+            _swipeActive = true;
+        }
+
+        function onReaderSwipeEnd(e) {
+            if (!_swipeActive) return;
+            _swipeActive = false;
+            if (!bibleData || isMultiSelectMode) return;
+            const reader = document.getElementById('readerPanel');
+            if (!reader || !reader.classList.contains('active')) return;
+            // Abort if a menu or modal opened during the gesture (e.g. long-press)
+            if (optionsMenu.classList.contains('show') ||
+                notepadModal.classList.contains('show') ||
+                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show'))) {
+                return;
+            }
+
+            const t = (e.changedTouches && e.changedTouches[0]) || e;
+            const dx = t.clientX - _swipeStartX;
+            const dy = t.clientY - _swipeStartY;
+            const dt = Date.now() - _swipeStartTime;
+
+            // Horizontal swipe: significant X movement, more horizontal than vertical, not too slow
+            const SWIPE_MIN_DX = 60;
+            const SWIPE_MAX_DY_RATIO = 0.75; // |dy| must be < |dx| * ratio
+            const SWIPE_MAX_MS = 600;
+
+            if (Math.abs(dx) < SWIPE_MIN_DX) return;
+            if (Math.abs(dy) > Math.abs(dx) * SWIPE_MAX_DY_RATIO) return;
+            if (dt > SWIPE_MAX_MS) return;
+
+            if (dx < 0) {
+                // Finger moved left → next chapter
+                goToNextChapter();
+            } else {
+                // Finger moved right → previous chapter
+                goToPrevChapter();
+            }
+        }
+
+        function onReaderSwipeCancel() {
+            _swipeActive = false;
+        }
+
+        (function initReaderSwipe() {
+            const reader = document.getElementById('readerPanel');
+            if (!reader) return;
+            reader.addEventListener('touchstart', onReaderSwipeStart, { passive: true });
+            reader.addEventListener('touchend', onReaderSwipeEnd, { passive: true });
+            reader.addEventListener('touchcancel', onReaderSwipeCancel, { passive: true });
+            // Optional mouse support for desktop testing (drag)
+            let mouseDown = false;
+            reader.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                mouseDown = true;
+                onReaderSwipeStart(e);
+            });
+            reader.addEventListener('mouseup', (e) => {
+                if (!mouseDown) return;
+                mouseDown = false;
+                onReaderSwipeEnd(e);
+            });
+            reader.addEventListener('mouseleave', () => { mouseDown = false; onReaderSwipeCancel(); });
+        })();
+
         // Unified tap-to-reveal: works on click (desktop) and pure touch taps (mobile).
         // Independent panel scrollers + reduced padding when bars are hidden mean
         // last-verse taps need an explicit scroll adjust after the footer returns.
@@ -1635,6 +1781,58 @@
             }
             chapterSelect.value = targetChapter;
             renderChapterView();
+        }
+
+        // Chapter navigation (used by swipe gestures)
+        function goToNextChapter() {
+            if (!bibleData || isMultiSelectMode || isRestoringState) return;
+            const bIdx = parseInt(bookSelect.value, 10);
+            const cIdx = parseInt(chapterSelect.value, 10);
+            if (isNaN(bIdx) || isNaN(cIdx)) return;
+            const book = bibleData[bIdx];
+            if (!book) return;
+
+            if (cIdx < book.chapters.length - 1) {
+                chapterSelect.value = cIdx + 1;
+                renderChapterView();
+                saveReadingState();
+            } else if (bIdx < bibleData.length - 1) {
+                bookSelect.value = bIdx + 1;
+                populateChapters(); // resets to chapter 0 and renders
+                saveReadingState();
+            } else {
+                showToast('End of Bible');
+            }
+        }
+
+        function goToPrevChapter() {
+            if (!bibleData || isMultiSelectMode || isRestoringState) return;
+            const bIdx = parseInt(bookSelect.value, 10);
+            const cIdx = parseInt(chapterSelect.value, 10);
+            if (isNaN(bIdx) || isNaN(cIdx)) return;
+
+            if (cIdx > 0) {
+                chapterSelect.value = cIdx - 1;
+                renderChapterView();
+                saveReadingState();
+            } else if (bIdx > 0) {
+                const prevBookIdx = bIdx - 1;
+                const lastCh = bibleData[prevBookIdx].chapters.length - 1;
+                bookSelect.value = prevBookIdx;
+                // Rebuild chapter options for the new book, then jump to its last chapter
+                chapterSelect.innerHTML = '';
+                bibleData[prevBookIdx].chapters.forEach((_, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `Ch ${i + 1}`;
+                    chapterSelect.appendChild(opt);
+                });
+                chapterSelect.value = lastCh;
+                renderChapterView();
+                saveReadingState();
+            } else {
+                showToast('Beginning of Bible');
+            }
         }
 
         function showToast(message) {
