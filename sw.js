@@ -1,10 +1,13 @@
-const CACHE_NAME = 'tkh-bible-v9.5';
+const CACHE_NAME = 'tkh-bible-v9.6';
 const FILES = ["/", "/index.html", "/kjv.json", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 const ASSETS = [
-  './',
-  './index.html',
-  './crossrefs.json',
-  './manifest.json',
+  '/',
+  '/index.html',
+  '/crossrefs.json',
+  '/manifest.json',
+  '/strongs_dict.json',
+  '/concordance.json',
+  '/kjv_strongs.json',
   'https://cdn.jsdelivr.net/npm/lucide@0.293.0/dist/umd/lucide.min.js'
 ];
 

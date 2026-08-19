@@ -1004,6 +1004,193 @@
         .xref-footer-btn:active {
             opacity: 0.85;
         }
+
+        /* ========== Strong's Concordance sheet ========== */
+        .strongs-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.55);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 36;
+        }
+        .strongs-modal.show { display: flex; }
+        .strongs-sheet {
+            background-color: var(--md-surface);
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+            padding-bottom: var(--safe-bottom);
+        }
+        .strongs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--md-surface-variant);
+            flex-shrink: 0;
+            gap: 8px;
+        }
+        .strongs-header h3 {
+            color: var(--md-primary);
+            font-weight: 500;
+            font-size: 17px;
+            margin: 0;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .strongs-close-btn {
+            background: none;
+            border: none;
+            color: var(--md-text-main);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .strongs-close-btn:active {
+            background-color: var(--md-surface-variant);
+        }
+        .strongs-body {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px 20px 24px;
+            flex: 1;
+            min-height: 0;
+            line-height: 1.85;
+            font-size: 18px;
+        }
+        .strongs-word {
+            display: inline;
+            color: var(--md-text-main);
+            border-radius: 4px;
+            padding: 1px 2px;
+            margin: 0 1px;
+            transition: background 0.15s;
+        }
+        .strongs-word.has-strong {
+            color: var(--md-primary);
+            text-decoration: underline;
+            text-decoration-color: rgba(168, 199, 250, 0.55);
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+        .strongs-word.has-strong:active {
+            background-color: rgba(168, 199, 250, 0.25);
+        }
+        .strongs-hint {
+            font-size: 12px;
+            color: var(--md-text-muted);
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--md-surface-variant);
+        }
+        .strongs-empty {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--md-text-muted);
+            font-size: 14px;
+        }
+
+        /* Strong's dictionary mini-pane */
+        .strongs-dict-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 40;
+        }
+        .strongs-dict-modal.show { display: flex; }
+        .strongs-dict-sheet {
+            background-color: var(--md-surface);
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+            padding-bottom: var(--safe-bottom);
+        }
+        .strongs-dict-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px 10px;
+            border-bottom: 1px solid var(--md-surface-variant);
+            flex-shrink: 0;
+        }
+        .strongs-dict-header h3 {
+            color: var(--md-primary);
+            font-weight: 600;
+            font-size: 16px;
+            margin: 0;
+        }
+        .strongs-dict-body {
+            overflow-y: auto;
+            padding: 16px 18px 20px;
+            flex: 1;
+            min-height: 0;
+        }
+        .strongs-dict-num {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--md-primary);
+            margin-bottom: 6px;
+        }
+        .strongs-dict-lang {
+            font-size: 12px;
+            color: var(--md-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 12px;
+        }
+        .strongs-dict-word {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--md-text-main);
+            margin-bottom: 8px;
+        }
+        .strongs-dict-meta {
+            font-size: 13px;
+            color: var(--md-text-muted);
+            margin-bottom: 14px;
+            line-height: 1.45;
+        }
+        .strongs-dict-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .strongs-dict-btn {
+            background-color: var(--md-secondary-container);
+            color: var(--md-on-secondary-container);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .strongs-dict-btn:active { opacity: 0.85; }
     </style>
 </head>
 <body>
@@ -1148,8 +1335,17 @@
                     <li><strong>Underline verse</strong> — Toggles a clear underline on the verse for quick visual emphasis. Also saved permanently.</li>
                     <li><strong>Search dictionary</strong> — Opens an external dictionary / study resource in a new browser tab so you can look up words or the passage.</li>
                     <li><strong>Cross references</strong> — Opens a bottom sheet of related verses (OpenBible data). See the dedicated section below for full details.</li>
+                    <li><strong>Strong's concordance</strong> — Opens the verse with every word that carries a Strong's number underlined and tappable. See the Strong's section below.</li>
                 </ul>
                 <p>Tap outside the menu or tap the same verse again to dismiss it.</p>
+
+                <h4>📖 Strong's Concordance</h4>
+                <p>From the long-press menu choose <strong>Strong's concordance</strong>. A sheet shows the full verse text.</p>
+                <ul>
+                    <li>Words that have a Strong's number are underlined in the primary colour.</li>
+                    <li><strong>Tap any underlined word</strong> — Opens a full offline dictionary card with: Strong's number (H… Hebrew / G… Greek), original-language spelling, transliteration, definition, KJV English meanings, the English word as it appears in this verse, and any Tense/Voice/Mood markers.</li>
+                    <li>Requires <code>kjv_strongs.json</code> (verse markup) and <code>strongs_dict.json</code> (Hebrew &amp; Greek lexicon) next to the app, just like crossrefs.json. No internet needed.</li>
+                </ul>
 
                 <h4>🔗 Cross References</h4>
                 <p>From the long-press menu choose <strong>Cross references</strong>. A sheet lists parallel and related verses ranked by strength (stars).</p>
@@ -1227,6 +1423,10 @@
             <i data-lucide="link-2" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
             <span>Cross references</span>
         </button>
+        <button class="context-option" data-action="strongs-concordance">
+            <i data-lucide="book-open" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Strong's concordance</span>
+        </button>
     </div>
 
     <div class="multi-select-bar" id="multiSelectBar">
@@ -1281,6 +1481,32 @@
                     <i data-lucide="copy" style="width: 14px; height: 14px;"></i> Copy
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Strong's Concordance bottom sheet -->
+    <div id="strongsModal" class="strongs-modal">
+        <div class="strongs-sheet" id="strongsSheet">
+            <div class="strongs-header">
+                <h3 id="strongsTitle">Strong's Concordance</h3>
+                <button id="closeStrongsBtn" class="strongs-close-btn" aria-label="Close">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="strongs-body" id="strongsBody"></div>
+        </div>
+    </div>
+
+    <!-- Strong's Dictionary mini-pane -->
+    <div id="strongsDictModal" class="strongs-dict-modal">
+        <div class="strongs-dict-sheet" id="strongsDictSheet">
+            <div class="strongs-dict-header">
+                <h3 id="strongsDictTitle">Strong's Dictionary</h3>
+                <button id="closeStrongsDictBtn" class="strongs-close-btn" aria-label="Close">
+                    <i data-lucide="x" style="width: 22px; height: 22px;"></i>
+                </button>
+            </div>
+            <div class="strongs-dict-body" id="strongsDictBody"></div>
         </div>
     </div>
 
@@ -1469,7 +1695,9 @@
             // Ignore if a modal/menu is open
             if (optionsMenu.classList.contains('show') ||
                 notepadModal.classList.contains('show') ||
-                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show'))) {
+                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show')) ||
+                (document.getElementById('strongsModal') && document.getElementById('strongsModal').classList.contains('show')) ||
+                (document.getElementById('strongsDictModal') && document.getElementById('strongsDictModal').classList.contains('show'))) {
                 return;
             }
             const t = (e.touches && e.touches[0]) || e;
@@ -1488,7 +1716,9 @@
             // Abort if a menu or modal opened during the gesture (e.g. long-press)
             if (optionsMenu.classList.contains('show') ||
                 notepadModal.classList.contains('show') ||
-                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show'))) {
+                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show')) ||
+                (document.getElementById('strongsModal') && document.getElementById('strongsModal').classList.contains('show')) ||
+                (document.getElementById('strongsDictModal') && document.getElementById('strongsDictModal').classList.contains('show'))) {
                 return;
             }
 
@@ -1562,6 +1792,8 @@
             if (optionsMenu.classList.contains('show') ||
                 notepadModal.classList.contains('show') ||
                 (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show')) ||
+                (document.getElementById('strongsModal') && document.getElementById('strongsModal').classList.contains('show')) ||
+                (document.getElementById('strongsDictModal') && document.getElementById('strongsDictModal').classList.contains('show')) ||
                 isMultiSelectMode) return true;
             if (target.closest('.md-select') ||
                 target.closest('.context-menu') ||
@@ -1570,7 +1802,9 @@
                 target.closest('.verse-num') ||
                 target.closest('.multi-select-bar') ||
                 target.closest('.notepad-modal') ||
-                target.closest('.xref-modal')) return true;
+                target.closest('.xref-modal') ||
+                target.closest('.strongs-modal') ||
+                target.closest('.strongs-dict-modal')) return true;
             return false;
         }
 
@@ -2183,6 +2417,8 @@
                     window.open(dictionaryUrl, '_blank');
                 } else if (action === 'cross-refs') {
                     showCrossReferences(selectedVerseKey);
+                } else if (action === 'strongs-concordance') {
+                    showStrongsConcordance(selectedVerseKey);
                 }
                 
                 hideOptionsMenu();
@@ -2543,6 +2779,289 @@
                     hideXrefSheet();
                     switchPanel('notepad');
                 };
+            }
+        })();
+
+        // ========== Strong's Concordance + Dictionary ==========
+        // Uses kjv_strongs.json directly (verses with embedded {H####}/{G####} markers).
+        let strongsData = null;          // map "Book|ch|v" → [{w,s?,t?,x?}, …]
+        let strongsLoading = false;
+
+        function parseStrongText(text) {
+            // Turn KJV-with-Strong's markup into word tokens for the concordance sheet.
+            const tokens = [];
+            let i = 0;
+            const len = text.length;
+            while (i < len) {
+                if (/\s/.test(text[i])) { i++; continue; }
+                if (/[A-Za-z']/.test(text[i])) {
+                    let word = '';
+                    while (i < len && /[A-Za-z']/.test(text[i])) word += text[i++];
+                    const strongs = [];
+                    let tvm = null;
+                    while (i < len && text[i] === '{') {
+                        const end = text.indexOf('}', i);
+                        if (end === -1) break;
+                        const content = text.slice(i + 1, end);
+                        if (content.startsWith('(') && content.endsWith(')')) {
+                            tvm = content.slice(1, -1).toUpperCase();
+                        } else if (/^[HG]\d+$/i.test(content)) {
+                            strongs.push(content.toUpperCase());
+                        }
+                        i = end + 1;
+                    }
+                    const tok = { w: word };
+                    if (strongs.length) tok.s = strongs[0];
+                    if (strongs.length > 1) tok.x = strongs.slice(1);
+                    if (tvm) tok.t = tvm;
+                    tokens.push(tok);
+                    continue;
+                }
+                if (text[i] === '{') {
+                    const end = text.indexOf('}', i);
+                    i = end === -1 ? i + 1 : end + 1;
+                    continue;
+                }
+                i++;
+            }
+            return tokens;
+        }
+
+        async function ensureStrongsLoaded() {
+            if (strongsData) return true;
+            if (strongsLoading) {
+                for (let i = 0; i < 80; i++) {
+                    await new Promise(r => setTimeout(r, 100));
+                    if (strongsData) return true;
+                }
+                return false;
+            }
+            strongsLoading = true;
+            try {
+                const resp = await fetch('kjv_strongs.json');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const raw = await resp.json();
+                const verses = Array.isArray(raw) ? raw : (raw.verses || []);
+                // Index by "Book|chapter|verse" for O(1) lookup (same key style as crossrefs)
+                const map = {};
+                for (let vi = 0; vi < verses.length; vi++) {
+                    const v = verses[vi];
+                    const name = v.book_name || v.book || 'Unknown';
+                    const key = `${name}|${v.chapter}|${v.verse}`;
+                    map[key] = parseStrongText(v.text || '');
+                }
+                strongsData = map;
+                return true;
+            } catch (err) {
+                console.warn('Strong\'s data unavailable:', err);
+                strongsData = {};
+                return false;
+            } finally {
+                strongsLoading = false;
+            }
+        }
+
+        // Offline Strong's lexicon (Hebrew + Greek) from Open Scriptures dictionary
+        let strongsLexicon = null;
+        let strongsLexiconLoading = false;
+
+        async function ensureStrongsLexiconLoaded() {
+            if (strongsLexicon) return true;
+            if (strongsLexiconLoading) {
+                for (let i = 0; i < 60; i++) {
+                    await new Promise(r => setTimeout(r, 100));
+                    if (strongsLexicon) return true;
+                }
+                return false;
+            }
+            strongsLexiconLoading = true;
+            try {
+                const resp = await fetch('strongs_dict.json');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                strongsLexicon = await resp.json();
+                return true;
+            } catch (err) {
+                console.warn('Strong\'s lexicon unavailable:', err);
+                strongsLexicon = {};
+                return false;
+            } finally {
+                strongsLexiconLoading = false;
+            }
+        }
+
+        function strongsDictionaryEntry(strongNum, englishWord, extra) {
+            const isHebrew = strongNum && strongNum.charAt(0) === 'H';
+            const isGreek = strongNum && strongNum.charAt(0) === 'G';
+            const tvm = extra && extra.t ? extra.t : null;
+            const extras = extra && extra.x ? extra.x : [];
+
+            const lex = (strongsLexicon && strongsLexicon[strongNum]) || null;
+            const lang = (lex && lex.g) || (isHebrew ? 'Hebrew' : (isGreek ? 'Greek' : 'Original language'));
+            const lemma = (lex && lex.l) || '';
+            const translit = (lex && lex.t) || '';
+            const definition = (lex && lex.d) || '';
+            const kjvMeanings = (lex && lex.k) || '';
+
+            return {
+                num: strongNum,
+                lang,
+                lemma,
+                translit,
+                definition,
+                kjvMeanings,
+                word: englishWord || '',
+                tvm,
+                extras,
+                found: !!lex
+            };
+        }
+
+        async function showStrongsDict(strongNum, englishWord, extra) {
+            const body = document.getElementById('strongsDictBody');
+            const title = document.getElementById('strongsDictTitle');
+            if (!body) return;
+
+            title.textContent = strongNum || 'Strong\'s';
+            body.innerHTML = '<div class="strongs-dict-meta">Loading lexicon…</div>';
+            document.getElementById('strongsDictModal').classList.add('show');
+
+            await ensureStrongsLexiconLoaded();
+            const entry = strongsDictionaryEntry(strongNum, englishWord, extra);
+
+            let html = `<div class="strongs-dict-num">${escapeHtml(entry.num)}</div>`;
+            html += `<div class="strongs-dict-lang">${escapeHtml(entry.lang)}</div>`;
+
+            if (entry.lemma) {
+                html += `<div class="strongs-dict-lemma" style="font-size:28px;font-weight:600;margin:8px 0 4px;line-height:1.3;direction:${entry.lang === 'Greek' ? 'ltr' : 'rtl'};">${escapeHtml(entry.lemma)}</div>`;
+            }
+            if (entry.translit) {
+                html += `<div class="strongs-dict-translit" style="font-size:14px;color:var(--md-text-muted);margin-bottom:10px;">${escapeHtml(entry.translit)}</div>`;
+            }
+
+            if (entry.word) {
+                html += `<div class="strongs-dict-word">In this verse: <strong>${escapeHtml(entry.word)}</strong></div>`;
+            }
+
+            if (entry.definition) {
+                html += `<div class="strongs-dict-def" style="font-size:15px;line-height:1.55;margin:12px 0;color:var(--md-text-main);">${escapeHtml(entry.definition)}</div>`;
+            }
+
+            if (entry.kjvMeanings) {
+                html += `<div class="strongs-dict-kjv" style="font-size:14px;margin-top:10px;padding:10px 12px;background:var(--md-surface-variant);border-radius:10px;line-height:1.45;"><span style="color:var(--md-primary);font-weight:600;">KJV:</span> ${escapeHtml(entry.kjvMeanings)}</div>`;
+            }
+
+            const notes = [];
+            if (entry.tvm) notes.push(`Tense / Voice / Mood: ${entry.tvm}`);
+            if (entry.extras && entry.extras.length) notes.push(`Also tagged: ${entry.extras.join(', ')}`);
+            if (notes.length) {
+                html += `<div class="strongs-dict-meta" style="margin-top:12px;">${escapeHtml(notes.join(' · '))}</div>`;
+            }
+
+            if (!entry.found) {
+                html += `<div class="strongs-dict-meta" style="margin-top:12px;">No full lexicon entry found for this number in the offline dictionary.</div>`;
+            }
+
+            body.innerHTML = html;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function hideStrongsDict() {
+            const m = document.getElementById('strongsDictModal');
+            if (m) m.classList.remove('show');
+        }
+
+        async function showStrongsConcordance(verseKey) {
+            if (!bibleData || !verseKey) return;
+            const parts = verseKey.split('_').map(Number);
+            const bIdx = parts[0], cIdx = parts[1], vIdx = parts[2];
+            const bookName = bibleData[bIdx].name;
+            const ch = cIdx + 1;
+            const v = vIdx + 1;
+            const lookup = `${bookName}|${ch}|${v}`;
+
+            const modal = document.getElementById('strongsModal');
+            const titleEl = document.getElementById('strongsTitle');
+            const bodyEl = document.getElementById('strongsBody');
+            titleEl.textContent = `${bookName} ${ch}:${v}`;
+            bodyEl.innerHTML = '<div class="strongs-empty">Loading Strong\'s data…</div>';
+            modal.classList.add('show');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const ok = await ensureStrongsLoaded();
+            if (!ok && (!strongsData || Object.keys(strongsData).length === 0)) {
+                bodyEl.innerHTML = '<div class="strongs-empty">Strong\'s data is not available offline. Place kjv_strongs.json next to the app.</div>';
+                return;
+            }
+
+            const tokens = (strongsData && strongsData[lookup]) || [];
+            if (tokens.length === 0) {
+                bodyEl.innerHTML = '<div class="strongs-empty">No Strong\'s markup found for this verse in the loaded data.</div>';
+                return;
+            }
+
+            const frag = document.createDocumentFragment();
+            const verseWrap = document.createElement('div');
+            tokens.forEach((tok, idx) => {
+                const span = document.createElement('span');
+                span.className = 'strongs-word' + (tok.s ? ' has-strong' : '');
+                span.textContent = tok.w;
+                if (tok.s) {
+                    span.dataset.strong = tok.s;
+                    span.dataset.word = tok.w;
+                    if (tok.t) span.dataset.tvm = tok.t;
+                    if (tok.x) span.dataset.extra = JSON.stringify(tok.x);
+                    span.title = tok.s + (tok.t ? ' · ' + tok.t : '');
+                    span.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const extra = {
+                            t: span.dataset.tvm || null,
+                            x: span.dataset.extra ? JSON.parse(span.dataset.extra) : []
+                        };
+                        showStrongsDict(span.dataset.strong, span.dataset.word, extra);
+                    });
+                }
+                verseWrap.appendChild(span);
+                // space between words
+                if (idx < tokens.length - 1) {
+                    verseWrap.appendChild(document.createTextNode(' '));
+                }
+            });
+            frag.appendChild(verseWrap);
+
+            const hint = document.createElement('div');
+            hint.className = 'strongs-hint';
+            hint.textContent = 'Underlined words have Strong\'s numbers. Tap a word to open the dictionary card.';
+            frag.appendChild(hint);
+
+            bodyEl.innerHTML = '';
+            bodyEl.appendChild(frag);
+        }
+
+        function hideStrongsSheet() {
+            hideStrongsDict();
+            const m = document.getElementById('strongsModal');
+            if (m) m.classList.remove('show');
+        }
+
+        (function initStrongsUI() {
+            const modal = document.getElementById('strongsModal');
+            const sheet = document.getElementById('strongsSheet');
+            const closeBtn = document.getElementById('closeStrongsBtn');
+            const dictModal = document.getElementById('strongsDictModal');
+            const dictSheet = document.getElementById('strongsDictSheet');
+            const closeDictBtn = document.getElementById('closeStrongsDictBtn');
+
+            if (closeBtn) closeBtn.onclick = hideStrongsSheet;
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (sheet && !sheet.contains(e.target)) hideStrongsSheet();
+                });
+            }
+            if (closeDictBtn) closeDictBtn.onclick = hideStrongsDict;
+            if (dictModal) {
+                dictModal.addEventListener('click', (e) => {
+                    if (dictSheet && !dictSheet.contains(e.target)) hideStrongsDict();
+                });
             }
         })();
 
