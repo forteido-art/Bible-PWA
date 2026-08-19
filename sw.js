@@ -3,6 +3,7 @@ const FILES = ["/", "/index.html", "/kjv.json", "/manifest.json", "/icon-192.png
 const ASSETS = [
   './',
   './index.html',
+  './crossrefs.json',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/lucide@0.293.0/dist/umd/lucide.min.js'
 ];

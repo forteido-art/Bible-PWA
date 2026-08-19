@@ -810,6 +810,200 @@
         .nav-item.active { color: var(--md-on-secondary-container); }
         .nav-icon-wrapper { padding: 4px 20px; border-radius: 16px; }
         .nav-item.active .nav-icon-wrapper { background-color: var(--md-secondary-container); }
+
+        /* ========== Cross References bottom sheet ========== */
+        .xref-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.55);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 35;
+        }
+        .xref-modal.show { display: flex; }
+        .xref-sheet {
+            background-color: var(--md-surface);
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+            padding-bottom: var(--safe-bottom);
+        }
+        .xref-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--md-surface-variant);
+            flex-shrink: 0;
+            gap: 8px;
+        }
+        .xref-header h3 {
+            color: var(--md-primary);
+            font-weight: 500;
+            font-size: 17px;
+            margin: 0;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .xref-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .xref-header-btn {
+            background: none;
+            border: none;
+            color: var(--md-primary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .xref-header-btn:active {
+            background-color: var(--md-surface-variant);
+        }
+        .xref-header-btn.muted {
+            color: var(--md-text-muted);
+        }
+        .xref-close-btn {
+            background: none;
+            border: none;
+            color: var(--md-text-main);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .xref-close-btn:active {
+            background-color: var(--md-surface-variant);
+        }
+        .xref-list {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 8px 12px 20px;
+            flex: 1;
+            min-height: 0;
+        }
+        .xref-item {
+            background-color: var(--md-surface-variant);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            transition: background-color 0.15s, border-color 0.15s;
+            border: 2px solid transparent;
+        }
+        .xref-item:active {
+            background-color: var(--md-secondary-container);
+        }
+        .xref-item.xref-selected {
+            border-color: var(--md-primary);
+            background-color: rgba(168, 199, 250, 0.18);
+        }
+        .xref-ref {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--md-primary);
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-color: transparent;
+            transition: text-decoration-color 0.15s;
+        }
+        .xref-ref:active {
+            text-decoration-color: var(--md-primary);
+            opacity: 0.85;
+        }
+        .xref-preview {
+            font-size: 13px;
+            color: var(--md-text-muted);
+            line-height: 1.35;
+            margin-top: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.15s;
+        }
+        .xref-item.xref-expanded .xref-preview {
+            display: block;
+            -webkit-line-clamp: unset;
+            -webkit-box-orient: unset;
+            overflow: visible;
+            white-space: normal;
+            color: var(--md-text-main);
+        }
+        .xref-votes {
+            font-size: 11px;
+            color: var(--md-text-muted);
+            white-space: nowrap;
+            opacity: 0.85;
+            align-self: flex-start;
+            margin-top: 2px;
+        }
+        .xref-empty {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--md-text-muted);
+            font-size: 14px;
+        }
+        .xref-footer {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 16px 14px;
+            border-top: 1px solid var(--md-surface-variant);
+            flex-shrink: 0;
+        }
+        .xref-footer.show {
+            display: flex;
+        }
+        .xref-footer-count {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-primary);
+            flex: 1;
+        }
+        .xref-footer-btn {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .xref-footer-btn.primary {
+            background-color: var(--md-primary);
+            color: var(--md-on-primary);
+        }
+        .xref-footer-btn.secondary {
+            background-color: var(--md-surface-variant);
+            color: var(--md-text-main);
+        }
+        .xref-footer-btn:active {
+            opacity: 0.85;
+        }
     </style>
 </head>
 <body>
@@ -936,6 +1130,7 @@
                     <li><strong>Underline verse</strong>: Underline key study materials directly in real-time.</li>
                     <li><strong>Add / Edit Notes</strong>: Open an automatic draft notepad drawer to link local reflections. Tapping a verse that has a note icon on it will instantly view your note.</li>
                     <li><strong>Search Dictionary</strong>: Link the verse to external language studies via external references.</li>
+                    <li><strong>Cross references</strong>: View related parallel verses (OpenBible data). <em>Tap</em> a result to expand or collapse the full verse text in place. <em>Double-tap</em> to open that passage in the reader. <em>Long-press</em> to copy a single full verse. Use the multi-select (copy-check) icon to select several results and copy them together. The sticky-note icon opens My Notes without leaving the sheet first.</li>
                 </ul>
 
                 <h4>🔍 Global Index Search</h4>
@@ -969,6 +1164,10 @@
             <i data-lucide="book" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
             <span>Search dictionary</span>
         </button>
+        <button class="context-option" data-action="cross-refs">
+            <i data-lucide="link-2" style="width: 20px; height: 20px; color: var(--md-primary);"></i>
+            <span>Cross references</span>
+        </button>
     </div>
 
     <div class="multi-select-bar" id="multiSelectBar">
@@ -995,6 +1194,34 @@
                 </div>
             </div>
             <textarea id="notepadTextarea" placeholder="Type your note here... (autosaves)"></textarea>
+        </div>
+    </div>
+
+    <!-- Cross References bottom sheet -->
+    <div id="xrefModal" class="xref-modal">
+        <div class="xref-sheet" id="xrefSheet">
+            <div class="xref-header">
+                <h3 id="xrefTitle">Cross References</h3>
+                <div class="xref-header-actions">
+                    <button id="xrefMultiSelectBtn" class="xref-header-btn" title="Select multiple to copy" aria-label="Multi-select">
+                        <i data-lucide="copy-check" style="width: 20px; height: 20px;"></i>
+                    </button>
+                    <button id="xrefNotepadBtn" class="xref-header-btn" title="My Notes" aria-label="My Notes">
+                        <i data-lucide="sticky-note" style="width: 20px; height: 20px;"></i>
+                    </button>
+                    <button id="closeXrefBtn" class="xref-close-btn" aria-label="Close">
+                        <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="xref-list" id="xrefList"></div>
+            <div class="xref-footer" id="xrefFooter">
+                <span class="xref-footer-count" id="xrefSelectCount">0 selected</span>
+                <button type="button" class="xref-footer-btn secondary" id="xrefCancelSelectBtn">Cancel</button>
+                <button type="button" class="xref-footer-btn primary" id="xrefCopySelectedBtn">
+                    <i data-lucide="copy" style="width: 14px; height: 14px;"></i> Copy
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1046,6 +1273,13 @@
         let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
         let underlines = JSON.parse(localStorage.getItem('bible_underlines') || '{}');
         let activeTempHighlightKey = null;
+
+        // Cross-reference system (OpenBible data)
+        let crossRefs = null;                 // lazy-loaded map "Book|ch|v" → [{b,c,v,w}, …]
+        let bookNameToIndex = {};             // "Genesis" → 0, …
+        let crossRefsLoading = false;
+        let xrefMultiSelectMode = false;
+        let xrefSelected = {};                // key "Book|ch|v" → true
 
         // Independent Notepad / Jotter notes (not verse-linked)
         let jotterNotes = JSON.parse(localStorage.getItem('bible_jotter_notes') || '[]');
@@ -1181,6 +1415,7 @@
             if (!target) return true;
             if (optionsMenu.classList.contains('show') ||
                 notepadModal.classList.contains('show') ||
+                (document.getElementById('xrefModal') && document.getElementById('xrefModal').classList.contains('show')) ||
                 isMultiSelectMode) return true;
             if (target.closest('.md-select') ||
                 target.closest('.context-menu') ||
@@ -1188,7 +1423,8 @@
                 target.closest('.btn-donate') ||
                 target.closest('.verse-num') ||
                 target.closest('.multi-select-bar') ||
-                target.closest('.notepad-modal')) return true;
+                target.closest('.notepad-modal') ||
+                target.closest('.xref-modal')) return true;
             return false;
         }
 
@@ -1369,6 +1605,9 @@
                 renderChapterView();
                 saveReadingState();
             };
+
+            // Map book names → indices for cross-reference jumps
+            buildBookNameIndex();
 
             // Restore last book/chapter if valid
             isRestoringState = true;
@@ -1744,6 +1983,8 @@
                     const dictionaryUrl = `https://thekingsbible.com/Dictionary`;
                     
                     window.open(dictionaryUrl, '_blank');
+                } else if (action === 'cross-refs') {
+                    showCrossReferences(selectedVerseKey);
                 }
                 
                 hideOptionsMenu();
@@ -1756,6 +1997,356 @@
                 hideOptionsMenu();
             }
         });
+
+        // ========== Cross-Reference System (OpenBible) ==========
+        function buildBookNameIndex() {
+            bookNameToIndex = {};
+            if (!bibleData) return;
+            bibleData.forEach((b, i) => {
+                bookNameToIndex[b.name] = i;
+                // Common aliases for robust matching across translations
+                const n = b.name.toLowerCase();
+                if (n === 'song of solomon' || n === 'song of songs' || n === 'canticles') {
+                    bookNameToIndex['Song of Solomon'] = i;
+                    bookNameToIndex['Song of Songs'] = i;
+                }
+                if (n === 'psalms' || n === 'psalm') {
+                    bookNameToIndex['Psalms'] = i;
+                    bookNameToIndex['Psalm'] = i;
+                }
+            });
+        }
+
+        async function ensureCrossRefsLoaded() {
+            if (crossRefs) return true;
+            if (crossRefsLoading) {
+                // Wait briefly for in-flight load
+                for (let i = 0; i < 40; i++) {
+                    await new Promise(r => setTimeout(r, 100));
+                    if (crossRefs) return true;
+                }
+                return false;
+            }
+            crossRefsLoading = true;
+            try {
+                const resp = await fetch('crossrefs.json');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                crossRefs = await resp.json();
+                return true;
+            } catch (err) {
+                console.warn('Cross-references unavailable:', err);
+                crossRefs = {};
+                return false;
+            } finally {
+                crossRefsLoading = false;
+            }
+        }
+
+        function getVerseText(bookName, chapter, verse, maxLen) {
+            // chapter/verse are 1-based. maxLen optional — omit for full text.
+            const bIdx = bookNameToIndex[bookName];
+            if (bIdx === undefined || !bibleData[bIdx]) return '';
+            const chArr = bibleData[bIdx].chapters[chapter - 1];
+            if (!chArr || !chArr[verse - 1]) return '';
+            let t = chArr[verse - 1]
+                .replace(/\{G\d+\}/g, '')
+                .replace(/\{\([G\d\s)]+\)\}/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (maxLen && t.length > maxLen) t = t.slice(0, maxLen - 1) + '…';
+            return t;
+        }
+
+        function navigateToXref(bIdx, cIdx, vIdx) {
+            hideXrefSheet();
+            bookSelect.value = bIdx;
+            populateChapters();
+            chapterSelect.value = cIdx;
+            renderChapterView();
+            switchPanel('reader');
+            setTimeout(() => {
+                const targetEl = document.getElementById(`v_pos_${vIdx}`);
+                if (targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetEl.classList.add('hl-temp-press');
+                    setTimeout(() => targetEl.classList.remove('hl-temp-press'), 1800);
+                }
+            }, 180);
+        }
+
+        async function showCrossReferences(verseKey) {
+            if (!bibleData || !verseKey) return;
+            const parts = verseKey.split('_').map(Number);
+            const bIdx = parts[0], cIdx = parts[1], vIdx = parts[2];
+            const bookName = bibleData[bIdx].name;
+            const ch = cIdx + 1;
+            const v = vIdx + 1;
+            const lookup = `${bookName}|${ch}|${v}`;
+
+            const xrefModal = document.getElementById('xrefModal');
+            const xrefTitle = document.getElementById('xrefTitle');
+            const xrefList = document.getElementById('xrefList');
+            xrefTitle.textContent = `${bookName} ${ch}:${v}`;
+            xrefList.innerHTML = '<div class="xref-empty">Loading…</div>';
+            xrefModal.classList.add('show');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const ok = await ensureCrossRefsLoaded();
+            if (!ok && (!crossRefs || Object.keys(crossRefs).length === 0)) {
+                xrefList.innerHTML = '<div class="xref-empty">Cross-reference data not available offline.</div>';
+                return;
+            }
+
+            const refs = (crossRefs && crossRefs[lookup]) || [];
+            if (refs.length === 0) {
+                xrefList.innerHTML = '<div class="xref-empty">No cross-references found for this verse.</div>';
+                return;
+            }
+
+            // Ensure name→index map is current
+            if (Object.keys(bookNameToIndex).length === 0) buildBookNameIndex();
+
+            // Reset multi-select when (re)opening the sheet
+            stopXrefMultiSelect();
+
+            const frag = document.createDocumentFragment();
+            refs.forEach(r => {
+                const targetIdx = bookNameToIndex[r.b];
+                if (targetIdx === undefined) return; // book not present in loaded translation
+
+                const item = document.createElement('div');
+                item.className = 'xref-item';
+                item.dataset.b = targetIdx;
+                item.dataset.c = r.c - 1;
+                item.dataset.v = r.v - 1;
+                item.dataset.book = r.b;
+                item.dataset.chapter = r.c;
+                item.dataset.verse = r.v;
+                item.dataset.xrefKey = `${r.b}|${r.c}|${r.v}`;
+
+                const fullText = getVerseText(r.b, r.c, r.v);
+                const stars = r.w >= 20 ? '★★★' : (r.w >= 10 ? '★★' : (r.w >= 5 ? '★' : ''));
+
+                item.innerHTML = `
+                    <div style="flex:1;min-width:0;">
+                        <div class="xref-ref">${r.b} ${r.c}:${r.v}</div>
+                        ${fullText ? `<div class="xref-preview"></div>` : ''}
+                    </div>
+                    <span class="xref-votes">${stars}</span>
+                `;
+                const previewEl = item.querySelector('.xref-preview');
+                if (previewEl) previewEl.textContent = fullText;
+
+                // Interactions:
+                // - Multi-select: any short tap toggles selection
+                // - Normal: single tap expands/collapses full verse in situ
+                // - Normal: double-tap opens verse in reader
+                // - Normal: long-press copies single verse
+                let pressTimer = null;
+                let isLongPress = false;
+                let singleTapTimer = null;
+                const LONG_MS = 480;
+                const DBL_MS = 300;
+
+                const clearPress = () => {
+                    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+                };
+
+                const startPress = () => {
+                    if (xrefMultiSelectMode) return;
+                    isLongPress = false;
+                    clearPress();
+                    pressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        // Cancel pending single-tap expand if long-press fires
+                        if (singleTapTimer) { clearTimeout(singleTapTimer); singleTapTimer = null; }
+                        item.style.backgroundColor = 'var(--md-secondary-container)';
+                        const text = getVerseText(item.dataset.book, +item.dataset.chapter, +item.dataset.verse);
+                        const refLabel = `${item.dataset.book} ${item.dataset.chapter}:${item.dataset.verse}`;
+                        const payload = text ? `${refLabel} — ${text}` : refLabel;
+                        navigator.clipboard.writeText(payload).then(() => {
+                            showToast(`Copied ${refLabel}`);
+                        }).catch(() => {
+                            showToast('Could not copy');
+                        });
+                        setTimeout(() => { item.style.backgroundColor = ''; }, 200);
+                    }, LONG_MS);
+                };
+
+                const endPress = () => {
+                    clearPress();
+                    if (!isLongPress) item.style.backgroundColor = '';
+                };
+
+                item.addEventListener('touchstart', startPress, { passive: true });
+                item.addEventListener('touchend', endPress, { passive: true });
+                item.addEventListener('touchmove', clearPress, { passive: true });
+                item.addEventListener('touchcancel', clearPress, { passive: true });
+                item.addEventListener('mousedown', startPress);
+                item.addEventListener('mouseup', endPress);
+                item.addEventListener('mouseleave', clearPress);
+
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isLongPress) return;
+
+                    if (xrefMultiSelectMode) {
+                        if (singleTapTimer) { clearTimeout(singleTapTimer); singleTapTimer = null; }
+                        toggleXrefSelection(item);
+                        return;
+                    }
+
+                    // Double-tap detection: second click within DBL_MS cancels expand and opens reader
+                    if (singleTapTimer) {
+                        clearTimeout(singleTapTimer);
+                        singleTapTimer = null;
+                        navigateToXref(+item.dataset.b, +item.dataset.c, +item.dataset.v);
+                        return;
+                    }
+                    singleTapTimer = setTimeout(() => {
+                        singleTapTimer = null;
+                        item.classList.toggle('xref-expanded');
+                    }, DBL_MS);
+                }, true);
+
+                frag.appendChild(item);
+            });
+
+            xrefList.innerHTML = '';
+            if (frag.childNodes.length === 0) {
+                xrefList.innerHTML = '<div class="xref-empty">No matching books in the loaded translation.</div>';
+            } else {
+                xrefList.appendChild(frag);
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function updateXrefSelectUI() {
+            const count = Object.keys(xrefSelected).length;
+            const countEl = document.getElementById('xrefSelectCount');
+            const footer = document.getElementById('xrefFooter');
+            const multiBtn = document.getElementById('xrefMultiSelectBtn');
+            if (countEl) countEl.textContent = `${count} selected`;
+            if (footer) {
+                if (xrefMultiSelectMode) footer.classList.add('show');
+                else footer.classList.remove('show');
+            }
+            if (multiBtn) {
+                if (xrefMultiSelectMode) multiBtn.classList.add('muted');
+                else multiBtn.classList.remove('muted');
+            }
+        }
+
+        function toggleXrefSelection(item) {
+            const key = item.dataset.xrefKey;
+            if (!key) return;
+            if (xrefSelected[key]) {
+                delete xrefSelected[key];
+                item.classList.remove('xref-selected');
+            } else {
+                xrefSelected[key] = true;
+                item.classList.add('xref-selected');
+            }
+            updateXrefSelectUI();
+        }
+
+        function startXrefMultiSelect() {
+            xrefMultiSelectMode = true;
+            xrefSelected = {};
+            document.querySelectorAll('.xref-item.xref-selected').forEach(el => {
+                el.classList.remove('xref-selected');
+            });
+            updateXrefSelectUI();
+            showToast('Tap verses to select · Copy when ready');
+        }
+
+        function stopXrefMultiSelect() {
+            xrefMultiSelectMode = false;
+            xrefSelected = {};
+            document.querySelectorAll('.xref-item.xref-selected').forEach(el => {
+                el.classList.remove('xref-selected');
+            });
+            updateXrefSelectUI();
+        }
+
+        function copySelectedXrefs() {
+            const keys = Object.keys(xrefSelected);
+            if (keys.length === 0) {
+                showToast('No verses selected');
+                return;
+            }
+            // Preserve list order as shown in the sheet
+            const ordered = [];
+            document.querySelectorAll('.xref-item').forEach(el => {
+                const key = el.dataset.xrefKey;
+                if (key && xrefSelected[key]) {
+                    ordered.push({
+                        book: el.dataset.book,
+                        chapter: +el.dataset.chapter,
+                        verse: +el.dataset.verse
+                    });
+                }
+            });
+            const lines = ordered.map(r => {
+                const fullText = getVerseText(r.book, r.chapter, r.verse);
+                const refLabel = `${r.book} ${r.chapter}:${r.verse}`;
+                return fullText ? `${refLabel} — ${fullText}` : refLabel;
+            });
+            const payload = lines.join('\n\n');
+            navigator.clipboard.writeText(payload).then(() => {
+                showToast(`Copied ${ordered.length} verse${ordered.length === 1 ? '' : 's'}`);
+                stopXrefMultiSelect();
+            }).catch(() => {
+                showToast('Could not copy');
+            });
+        }
+
+        function hideXrefSheet() {
+            stopXrefMultiSelect();
+            const xrefModal = document.getElementById('xrefModal');
+            if (xrefModal) xrefModal.classList.remove('show');
+        }
+
+        // Wire close, multi-select, notepad shortcut & backdrop
+        (function initXrefUI() {
+            const xrefModal = document.getElementById('xrefModal');
+            const closeXrefBtn = document.getElementById('closeXrefBtn');
+            const xrefSheet = document.getElementById('xrefSheet');
+            const multiBtn = document.getElementById('xrefMultiSelectBtn');
+            const notepadBtn = document.getElementById('xrefNotepadBtn');
+            const cancelBtn = document.getElementById('xrefCancelSelectBtn');
+            const copyBtn = document.getElementById('xrefCopySelectedBtn');
+
+            if (closeXrefBtn) closeXrefBtn.onclick = hideXrefSheet;
+            if (xrefModal) {
+                xrefModal.addEventListener('click', (e) => {
+                    if (xrefSheet && !xrefSheet.contains(e.target)) hideXrefSheet();
+                });
+            }
+            if (multiBtn) {
+                multiBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (xrefMultiSelectMode) stopXrefMultiSelect();
+                    else startXrefMultiSelect();
+                };
+            }
+            if (cancelBtn) cancelBtn.onclick = (e) => {
+                e.stopPropagation();
+                stopXrefMultiSelect();
+            };
+            if (copyBtn) copyBtn.onclick = (e) => {
+                e.stopPropagation();
+                copySelectedXrefs();
+            };
+            if (notepadBtn) {
+                notepadBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    hideXrefSheet();
+                    switchPanel('notepad');
+                };
+            }
+        })();
 
         // Notepad Handlers
         function openNotepad(key, isEditing = true) {
