@@ -1321,6 +1321,171 @@
             text-decoration: none;
         }
         .strongs-dict-btn:active { opacity: 0.85; }
+
+        /* In-app Easton's Bible Dictionary sheet */
+        .dict-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.55);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 36;
+        }
+        .dict-modal.show { display: flex; }
+        .dict-sheet {
+            background-color: var(--md-surface);
+            width: 100%;
+            max-width: 600px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            max-height: 78vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+            padding-bottom: var(--safe-bottom);
+        }
+        .dict-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 10px;
+            border-bottom: 1px solid var(--md-surface-variant);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .dict-header h3 {
+            color: var(--md-primary);
+            font-weight: 500;
+            font-size: 17px;
+            margin: 0;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dict-search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 16px 0;
+            padding: 8px 14px;
+            background-color: var(--md-surface-variant);
+            border-radius: 22px;
+            flex-shrink: 0;
+        }
+        .dict-search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--md-text-main);
+            font-size: 15px;
+        }
+        .dict-body {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px 16px 24px;
+            flex: 1;
+            min-height: 0;
+        }
+        .dict-section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--md-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 12px 0 8px;
+        }
+        .dict-entry-card {
+            background-color: var(--md-surface-variant);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            cursor: default;
+            transition: background-color 0.15s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .dict-entry-card.dict-press {
+            background-color: var(--md-secondary-container);
+        }
+        .dict-entry-term {
+            font-weight: 700;
+            color: var(--md-primary);
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+        .dict-entry-def {
+            font-size: 14px;
+            color: var(--md-text-main);
+            line-height: 1.55;
+        }
+        .dict-entry-def.clamped {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .dict-entry-refs {
+            font-size: 12px;
+            color: var(--md-text-muted);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        .dict-back-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .dict-back-btn {
+            background: none;
+            border: none;
+            color: var(--md-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .dict-empty {
+            text-align: center;
+            color: var(--md-text-muted);
+            padding: 24px 12px;
+            font-size: 14px;
+        }
+        .dict-hint {
+            font-size: 12px;
+            color: var(--md-text-muted);
+            margin-top: 4px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        .dict-letter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .dict-letter-btn {
+            background-color: var(--md-surface-variant);
+            color: var(--md-text-muted);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 28px;
+        }
+        .dict-letter-btn.active {
+            background-color: var(--md-primary);
+            color: var(--md-on-primary);
+        }
     </style>
 </head>
 <body>
@@ -1481,7 +1646,7 @@
                     <li><strong>Add note / Edit note</strong> — Note tied to that verse. Saves as you type. Noted verses show a left border; tap them later to reopen.</li>
                     <li><strong>Highlight</strong> — Cycles yellow → green → blue → pink → off. Saved per verse.</li>
                     <li><strong>Underline</strong> — Toggle underline for emphasis. Saved per verse.</li>
-                    <li><strong>Search dictionary</strong> — Opens a dictionary / study page in the browser.</li>
+                    <li><strong>Search dictionary</strong> — Opens the offline Easton's Bible Dictionary for the selected verse. Shows related terms from the verse, full A–Z browsing, and search by name or topic. <strong>Long-press</strong> a result to read the full entry; use <strong>Back</strong> to return to results. Single tap does nothing. X closes the dictionary.</li>
                     <li><strong>Cross references</strong> — Related verses (details below).</li>
                     <li><strong>Strong's concordance</strong> — Word-level Strong's lookup (details below).</li>
                 </ul>
@@ -1664,6 +1829,23 @@
                 </button>
             </div>
             <div class="strongs-dict-body" id="strongsDictBody"></div>
+        </div>
+    </div>
+
+    <!-- Easton's Bible Dictionary sheet (bib_dictionary.json) -->
+    <div id="dictModal" class="dict-modal">
+        <div class="dict-sheet" id="dictSheet">
+            <div class="dict-header">
+                <h3 id="dictTitle">Easton's Dictionary</h3>
+                <button id="closeDictBtn" class="strongs-close-btn" aria-label="Close">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <div class="dict-search-box">
+                <i data-lucide="search" style="width: 18px; height: 18px; color: var(--md-text-muted); flex-shrink: 0;"></i>
+                <input type="text" id="dictSearchInput" placeholder="Search Bible terms…" autocomplete="off">
+            </div>
+            <div class="dict-body" id="dictBody"></div>
         </div>
     </div>
 
@@ -2561,18 +2743,7 @@
                 } else if (action === 'add-note' || action === 'edit-note') {
                     openNotepad(selectedVerseKey, true); // Direct edit mode
                 } else if (action === 'search-dictionary') {
-                    // Grab Selected Verse Information 
-                    const parts = selectedVerseKey.split('_');
-                    const bookName = bibleData[parts[0]].name;
-                    const chNum = parseInt(parts[1]) + 1;
-                    const vNum = parseInt(parts[2]) + 1;
-                    
-                    // Generate dictionary target search queries
-                    const query = encodeURIComponent(`${bookName} ${chNum}:${vNum}`);
-                    // Redirect directly to Blue Letter Bible's resource look up
-                    const dictionaryUrl = `https://thekingsbible.com/Dictionary`;
-                    
-                    window.open(dictionaryUrl, '_blank');
+                    openLocalDictionary(selectedVerseKey);
                 } else if (action === 'cross-refs') {
                     showCrossReferences(selectedVerseKey);
                 } else if (action === 'strongs-concordance') {
@@ -3219,6 +3390,408 @@
             if (dictModal) {
                 dictModal.addEventListener('click', (e) => {
                     if (dictSheet && !dictSheet.contains(e.target)) hideStrongsDict();
+                });
+            }
+        })();
+
+        // ========== Easton's Bible Dictionary (bib_dictionary.json) ==========
+        let bibDictionary = null;       // { meta, entries, letter_index, keyword_index }
+        let bibDictLoading = null;
+        let dictActiveVerseKey = null;
+        let dictViewMode = 'list';      // 'list' | 'detail'
+        let dictLastHits = [];          // current list shown (may be search/letter)
+        let dictVerseHits = [];         // exact matches for the opened verse (Back restores these)
+        let dictVerseHint = '';
+        let dictActiveLetter = '';
+        let dictTermMap = null;         // uppercase term key -> entry (built once)
+
+        async function ensureBibDictionary() {
+            if (bibDictionary) return bibDictionary;
+            if (bibDictLoading) return bibDictLoading;
+            bibDictLoading = (async () => {
+                try {
+                    const res = await fetch('bib_dictionary.json');
+                    if (!res.ok) throw new Error('fetch failed');
+                    bibDictionary = await res.json();
+                    // Build exact term lookup for verse-word matching
+                    dictTermMap = Object.create(null);
+                    (bibDictionary.entries || []).forEach(e => {
+                        const k = String(e.key || e.term || '').toUpperCase().trim();
+                        if (k && !dictTermMap[k]) dictTermMap[k] = e;
+                        // Also index without trailing plural S for simple match
+                        if (k.endsWith('S') && k.length > 3) {
+                            const stem = k.slice(0, -1);
+                            if (!dictTermMap[stem]) dictTermMap[stem] = e;
+                        }
+                    });
+                    return bibDictionary;
+                } catch (err) {
+                    console.error('bib_dictionary load failed', err);
+                    bibDictionary = null;
+                    dictTermMap = null;
+                    return null;
+                } finally {
+                    bibDictLoading = null;
+                }
+            })();
+            return bibDictLoading;
+        }
+
+        function hideLocalDictionary() {
+            const modal = document.getElementById('dictModal');
+            if (modal) modal.classList.remove('show');
+            dictActiveVerseKey = null;
+            dictViewMode = 'list';
+            dictLastHits = [];
+            dictActiveLetter = '';
+        }
+
+        function getVersePlainText(verseKey) {
+            if (!verseKey || !bibleData) return '';
+            const parts = verseKey.split('_').map(Number);
+            const book = bibleData[parts[0]];
+            if (!book) return '';
+            const ch = book.chapters[parts[1]];
+            if (!ch) return '';
+            const text = ch[parts[2]] || '';
+            return String(text).replace(/\{G\d+\}/g, '').replace(/\{\([G\d\s)]+\)\}/g, '');
+        }
+
+        /** Search Easton's entries by term prefix, definition, and keyword index */
+        function searchEastonDictionary(query, limit) {
+            if (!bibDictionary || !bibDictionary.entries) return [];
+            const q = (query || '').trim().toLowerCase();
+            const max = limit || 40;
+            if (!q) return [];
+
+            const entries = bibDictionary.entries;
+            const scored = [];
+            const seen = new Set();
+
+            // 1) Exact / prefix match on term
+            for (let i = 0; i < entries.length; i++) {
+                const e = entries[i];
+                const key = (e.key || e.term || '').toLowerCase();
+                const term = (e.term || '').toLowerCase();
+                if (key === q || term === q) {
+                    scored.push({ e, score: 100, i });
+                    seen.add(i);
+                } else if (key.startsWith(q) || term.startsWith(q)) {
+                    scored.push({ e, score: 80, i });
+                    seen.add(i);
+                }
+            }
+
+            // 2) Keyword index
+            const kw = bibDictionary.keyword_index || {};
+            const words = q.split(/\s+/).filter(w => w.length >= 2);
+            words.forEach(w => {
+                const idxs = kw[w];
+                if (!idxs) return;
+                idxs.forEach(i => {
+                    if (seen.has(i) || i < 0 || i >= entries.length) return;
+                    seen.add(i);
+                    scored.push({ e: entries[i], score: 40, i });
+                });
+            });
+
+            // 3) Substring in term or start of definition
+            if (scored.length < max) {
+                for (let i = 0; i < entries.length && scored.length < max * 2; i++) {
+                    if (seen.has(i)) continue;
+                    const e = entries[i];
+                    const term = (e.term || '').toLowerCase();
+                    const def = (e.def || '').toLowerCase();
+                    if (term.includes(q)) {
+                        scored.push({ e, score: 30, i });
+                        seen.add(i);
+                    } else if (def.includes(q)) {
+                        scored.push({ e, score: 10, i });
+                        seen.add(i);
+                    }
+                }
+            }
+
+            scored.sort((a, b) => b.score - a.score || (a.e.term || '').localeCompare(b.e.term || ''));
+            return scored.slice(0, max).map(s => s.e);
+        }
+
+        /** Exact dictionary entries for words present in a verse (order of first appearance) */
+        function entriesForVerseText(verseText, limit) {
+            if (!bibDictionary || !verseText || !dictTermMap) return [];
+            const stop = new Set(('a an the of to in for and or by with from as is was were be at on it its this that which who are not but so if he she they them his her their you your we us our unto into onto upon also than then when what where whom whose been being had has have does did can may shall will into over under after before about against among between through during without within'.split(' ')));
+            const words = String(verseText).match(/[A-Za-z']{2,}/g) || [];
+            const hits = [];
+            const seen = new Set();
+            const max = limit || 80;
+
+            for (const w of words) {
+                if (hits.length >= max) break;
+                const wl = w.toLowerCase();
+                if (stop.has(wl) || wl.length < 2) continue;
+
+                const key = w.toUpperCase().replace(/'/g, '');
+                let entry = dictTermMap[key];
+
+                // Try singular if plural-looking
+                if (!entry && key.endsWith('S') && key.length > 3) {
+                    entry = dictTermMap[key.slice(0, -1)];
+                }
+                // Try with/without common biblical endings
+                if (!entry && key.endsWith('ED') && key.length > 4) {
+                    entry = dictTermMap[key.slice(0, -2)] || dictTermMap[key.slice(0, -1)];
+                }
+                if (!entry && key.endsWith('ING') && key.length > 5) {
+                    entry = dictTermMap[key.slice(0, -3)];
+                }
+
+                if (!entry) continue;
+                const id = entry.key || entry.term;
+                if (seen.has(id)) continue;
+                seen.add(id);
+                hits.push(entry);
+            }
+            return hits;
+        }
+
+        function entriesByLetter(letter, limit) {
+            if (!bibDictionary || !bibDictionary.entries) return [];
+            const L = (letter || 'A').toUpperCase();
+            const max = limit || 40;
+            const out = [];
+            for (let i = 0; i < bibDictionary.entries.length; i++) {
+                const e = bibDictionary.entries[i];
+                if ((e.key || '')[0] === L) {
+                    out.push(e);
+                    if (out.length >= max) break;
+                }
+            }
+            return out;
+        }
+
+        function renderDictEntryList(hits, opts) {
+            const body = document.getElementById('dictBody');
+            if (!body) return;
+            opts = opts || {};
+            dictViewMode = 'list';
+            dictLastHits = hits || [];
+
+            let html = '';
+            if (opts.hint) {
+                html += `<p class="dict-hint">${escapeHtml(opts.hint)}</p>`;
+            }
+
+            // Letter index bar
+            if (bibDictionary && bibDictionary.letter_index) {
+                html += `<div class="dict-letter-bar">`;
+                Object.keys(bibDictionary.letter_index).forEach(L => {
+                    const active = (dictActiveLetter === L) ? ' active' : '';
+                    html += `<button type="button" class="dict-letter-btn${active}" data-letter="${L}">${L}</button>`;
+                });
+                html += `</div>`;
+            }
+
+            if (!hits || !hits.length) {
+                html += `<div class="dict-empty">No entries found. Try another word or letter.</div>`;
+            } else {
+                hits.forEach((e, idx) => {
+                    const term = escapeHtml(e.term || '');
+                    const def = escapeHtml((e.def || '').slice(0, 280));
+                    const refs = (e.refs && e.refs.length) ? `<div class="dict-entry-refs">${escapeHtml(e.refs.slice(0, 4).join(' · '))}</div>` : '';
+                    html += `<div class="dict-entry-card" data-idx="${idx}">
+                        <div class="dict-entry-term">${term}</div>
+                        <div class="dict-entry-def clamped">${def}${(e.def || '').length > 280 ? '…' : ''}</div>
+                        ${refs}
+                    </div>`;
+                });
+            }
+
+            body.innerHTML = html;
+
+            // Long-press opens full entry; single tap does nothing
+            body.querySelectorAll('.dict-entry-card').forEach(el => {
+                let pressTimer = null;
+                let longPressed = false;
+                const LONG_MS = 450;
+
+                const clearPress = () => {
+                    if (pressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                    el.classList.remove('dict-press');
+                };
+
+                const startPress = (e) => {
+                    longPressed = false;
+                    clearPress();
+                    el.classList.add('dict-press');
+                    pressTimer = setTimeout(() => {
+                        longPressed = true;
+                        el.classList.remove('dict-press');
+                        const idx = parseInt(el.getAttribute('data-idx'), 10);
+                        const entry = dictLastHits[idx];
+                        if (entry) renderDictEntryDetail(entry);
+                    }, LONG_MS);
+                };
+
+                const endPress = (e) => {
+                    clearPress();
+                    // Tap: intentionally do nothing
+                };
+
+                el.addEventListener('touchstart', startPress, { passive: true });
+                el.addEventListener('touchend', endPress, { passive: true });
+                el.addEventListener('touchmove', clearPress, { passive: true });
+                el.addEventListener('touchcancel', clearPress, { passive: true });
+                el.addEventListener('mousedown', startPress);
+                el.addEventListener('mouseup', endPress);
+                el.addEventListener('mouseleave', clearPress);
+                // Prevent click-follow from doing anything
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+            body.querySelectorAll('.dict-letter-btn').forEach(btn => {
+                btn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    const L = btn.getAttribute('data-letter');
+                    dictActiveLetter = L;
+                    const list = entriesByLetter(L, 50);
+                    const searchInput = document.getElementById('dictSearchInput');
+                    if (searchInput) searchInput.value = '';
+                    renderDictEntryList(list, { hint: `Entries under “${L}”. Long-press a result to read the full entry.` });
+                };
+            });
+        }
+
+        function renderDictEntryDetail(entry) {
+            const body = document.getElementById('dictBody');
+            if (!body || !entry) return;
+            dictViewMode = 'detail';
+            const term = escapeHtml(entry.term || '');
+            const def = escapeHtml(entry.def || '');
+            const refs = (entry.refs && entry.refs.length)
+                ? `<div class="dict-entry-refs"><strong>Refs:</strong> ${escapeHtml(entry.refs.join(' · '))}</div>`
+                : '';
+            body.innerHTML = `
+                <div class="dict-back-row">
+                    <button type="button" class="dict-back-btn" id="dictBackBtn">← Back to results</button>
+                </div>
+                <div class="dict-entry-card" style="cursor:default;-webkit-user-select:text;user-select:text;">
+                    <div class="dict-entry-term">${term}</div>
+                    <div class="dict-entry-def">${def}</div>
+                    ${refs}
+                </div>
+                <p class="dict-hint">Source: Easton's Bible Dictionary (1897). Use Back to return to results, or X to close.</p>
+            `;
+            const back = document.getElementById('dictBackBtn');
+            if (back) {
+                back.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Return to the verse word-list (never close the dictionary)
+                    const restore = (dictVerseHits && dictVerseHits.length) ? dictVerseHits : dictLastHits;
+                    dictActiveLetter = '';
+                    const searchInput = document.getElementById('dictSearchInput');
+                    if (searchInput) searchInput.value = '';
+                    renderDictEntryList(restore, {
+                        hint: dictVerseHint || 'Long-press a result to read the full entry.'
+                    });
+                };
+            }
+        }
+
+        async function openLocalDictionary(verseKey) {
+            dictActiveVerseKey = verseKey;
+            dictActiveLetter = '';
+            dictVerseHits = [];
+            dictVerseHint = '';
+            const modal = document.getElementById('dictModal');
+            const titleEl = document.getElementById('dictTitle');
+            const searchInput = document.getElementById('dictSearchInput');
+            const body = document.getElementById('dictBody');
+            if (!modal || !body) return;
+
+            let bookName = '';
+            let chNum = 1;
+            let vNum = 1;
+            if (verseKey && bibleData) {
+                const parts = verseKey.split('_');
+                const bIdx = parseInt(parts[0], 10);
+                chNum = parseInt(parts[1], 10) + 1;
+                vNum = parseInt(parts[2], 10) + 1;
+                bookName = (bibleData[bIdx] && bibleData[bIdx].name) || '';
+            }
+            if (titleEl) {
+                titleEl.textContent = bookName
+                    ? `Dictionary · ${bookName} ${chNum}:${vNum}`
+                    : "Easton's Dictionary";
+            }
+            if (searchInput) searchInput.value = '';
+            body.innerHTML = `<div class="dict-empty">Loading dictionary…</div>`;
+            modal.classList.add('show');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const data = await ensureBibDictionary();
+            if (!data || !data.entries) {
+                body.innerHTML = `<div class="dict-empty">Dictionary file not found.<br>Place <code>bib_dictionary.json</code> next to the app.</div>`;
+                return;
+            }
+
+            // Exact dictionary entries for words found in this verse only
+            const verseText = getVersePlainText(verseKey);
+            const hits = entriesForVerseText(verseText, 80);
+            dictVerseHits = hits.slice();
+            dictVerseHint = hits.length
+                ? `Words in ${bookName} ${chNum}:${vNum} found in the dictionary (${hits.length}). Long-press a result to read the full entry.`
+                : `No dictionary entries matched words in ${bookName} ${chNum}:${vNum}. Search a term or pick a letter.`;
+
+            if (hits.length) {
+                renderDictEntryList(hits, { hint: dictVerseHint });
+            } else {
+                // Empty verse match: still open dictionary; show letter A as browse fallback
+                dictActiveLetter = 'A';
+                renderDictEntryList(entriesByLetter('A', 30), { hint: dictVerseHint });
+            }
+        }
+
+        (function initLocalDictUI() {
+            const modal = document.getElementById('dictModal');
+            const sheet = document.getElementById('dictSheet');
+            const closeBtn = document.getElementById('closeDictBtn');
+            const searchInput = document.getElementById('dictSearchInput');
+            if (closeBtn) closeBtn.onclick = hideLocalDictionary;
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (sheet && !sheet.contains(e.target)) hideLocalDictionary();
+                });
+            }
+            if (searchInput) {
+                let timer = null;
+                searchInput.addEventListener('input', () => {
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        const q = searchInput.value || '';
+                        dictActiveLetter = '';
+                        if (!q.trim()) {
+                            // Restore exact word-list for the opened verse
+                            if (dictVerseHits && dictVerseHits.length) {
+                                renderDictEntryList(dictVerseHits, {
+                                    hint: dictVerseHint || 'Long-press a result to read the full entry.'
+                                });
+                            } else {
+                                const verseText = getVersePlainText(dictActiveVerseKey);
+                                let hits = entriesForVerseText(verseText, 80);
+                                if (!hits.length) hits = entriesByLetter('A', 30);
+                                renderDictEntryList(hits, { hint: 'Long-press a result to read the full entry.' });
+                            }
+                            return;
+                        }
+                        const hits = searchEastonDictionary(q, 50);
+                        renderDictEntryList(hits, { hint: `Results for “${q.trim()}”. Long-press a result to read the full entry.` });
+                    }, 180);
                 });
             }
         })();

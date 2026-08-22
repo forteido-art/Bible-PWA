@@ -6,6 +6,7 @@ const ASSETS = [
   '/crossrefs.json',
   '/web.json',
   '/bsb.json',
+  '/bib_dictionary.json',
   '/manifest.json',
   '/strongs_dict.json',
   '/concordance.json',
