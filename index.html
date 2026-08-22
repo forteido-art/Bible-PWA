@@ -229,7 +229,7 @@
             z-index: 1;
         }
 
-        /* Upload Layout Setup */
+        /* Upload Layout Setup (legacy file picker kept for optional import) */
         .upload-container {
             display: flex;
             flex-direction: column;
@@ -255,6 +255,89 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             margin-top: 16px;
             cursor: pointer;
+        }
+
+        /* Gold startup loading screen — full-viewport overlay; only visible while .active */
+        #uploadPanel.loading-screen {
+            display: none !important;
+            position: fixed !important;
+            inset: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 200;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #c9a227 0%, #e8d48b 45%, #b8860b 100%);
+            padding: 32px 24px;
+            text-align: center;
+            overflow: hidden;
+            pointer-events: auto;
+            visibility: hidden;
+            margin: 0 !important;
+        }
+        #uploadPanel.loading-screen.active {
+            display: flex !important;
+            visibility: visible;
+        }
+        /* After dismiss: never participate in layout */
+        #uploadPanel.loading-screen.splash-done {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            z-index: -1 !important;
+        }
+        .loading-logo-wrap {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25), 0 0 0 4px rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+            flex-shrink: 0;
+        }
+        .loading-logo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+        .loading-welcome {
+            color: #1a1408;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.55;
+            max-width: 300px;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+        .loading-welcome .loading-wait {
+            display: block;
+            margin-top: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #3d2e0a;
+            opacity: 0.9;
+        }
+        .loading-spinner {
+            width: 28px;
+            height: 28px;
+            margin-top: 24px;
+            border: 3px solid rgba(26, 20, 8, 0.2);
+            border-top-color: #1a1408;
+            border-radius: 50%;
+            animation: loading-spin 0.8s linear infinite;
+        }
+        @keyframes loading-spin {
+            to { transform: rotate(360deg); }
         }
 
         .file-hidden { display: none; }
@@ -561,11 +644,58 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 16px; background-color: var(--md-surface);
             border-radius: 12px; margin-top: 12px;
+            gap: 12px;
         }
         .btn-danger {
             background-color: #e74c3c; color: white; border: none;
             padding: 8px 16px; border-radius: 20px; font-weight: bold;
             cursor: pointer;
+        }
+        .btn-update {
+            background-color: var(--green-donate);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(46, 204, 113, 0.3);
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .btn-update:active {
+            opacity: 0.8;
+        }
+        .btn-update:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        .translation-toggle {
+            display: flex;
+            background-color: var(--md-surface-variant);
+            border-radius: 20px;
+            padding: 3px;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .trans-btn {
+            background: transparent;
+            color: var(--md-text-muted);
+            border: none;
+            border-radius: 17px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .trans-btn.active {
+            background-color: var(--md-primary);
+            color: var(--md-on-primary);
+        }
+        .trans-btn:active {
+            opacity: 0.85;
         }
         
         /* Dedicated How To Use Row Styles */
@@ -1210,16 +1340,17 @@
 
     <main id="mainContentPanel">
         
-        <div id="uploadPanel" class="view-panel active">
-            <div class="upload-container">
-                <i data-lucide="book-open" style="width: 52px; height: 52px; color: var(--md-primary);"></i>
-                <h3 style="margin-top: 16px;">No Active Local Data</h3>
-                <p style="color: var(--md-text-muted); margin-top: 8px; font-size: 14px;">Select any structural JSON Bible translation to initialize application storage layout.</p>
-                <label class="md-btn-fab">
-                    <i data-lucide="upload"></i> Choose JSON File
-                    <input type="file" id="bibleDataFile" class="file-hidden" accept=".json">
-                </label>
+        <div id="uploadPanel" class="view-panel active loading-screen">
+            <div class="loading-logo-wrap">
+                <img id="loadingAppLogo" src="icon-192.png" alt="App logo">
             </div>
+            <p class="loading-welcome">
+                Welcome to The King's Household Church Bible App.
+                <span class="loading-wait">Wait while bible loads</span>
+            </p>
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <!-- Optional JSON import kept for advanced use; not shown on the splash -->
+            <input type="file" id="bibleDataFile" class="file-hidden" accept=".json">
         </div>
 
         <div id="readerPanel" class="view-panel scroll-keep">
@@ -1291,10 +1422,22 @@
 
             <div class="settings-row">
                 <div>
-                    <p style="font-weight: 500;">Active Module Database</p>
-                    <p style="font-size: 12px; color: var(--md-text-muted);">Purge local files to load another schema file.</p>
+                    <p style="font-weight: 500;">Bible Translation</p>
+                    <p style="font-size: 12px; color: var(--md-text-muted);">Switch between KJV, WEB, and BSB.</p>
                 </div>
-                <button class="btn-danger" id="btnClearData">Clear Database</button>
+                <div class="translation-toggle" id="translationToggle">
+                    <button type="button" class="trans-btn active" data-trans="kjv" id="btnTransKjv">KJV</button>
+                    <button type="button" class="trans-btn" data-trans="web" id="btnTransWeb">WEB</button>
+                    <button type="button" class="trans-btn" data-trans="bsb" id="btnTransBsb">BSB</button>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div>
+                    <p style="font-weight: 500;">App Updates</p>
+                    <p style="font-size: 12px; color: var(--md-text-muted);">Check for a newer app version (service worker).</p>
+                </div>
+                <button class="btn-update" id="btnUpdateApp">Update App</button>
             </div>
         </div>
 
@@ -1303,92 +1446,106 @@
                 <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to Settings
             </button>
             <div class="guide-container">
-                <h3 style="margin-bottom: 12px;">App Instructions</h3>
+                <h3 style="margin-bottom: 12px;">How to Use</h3>
                 <hr style="border: 0; border-top: 1px solid var(--md-surface-variant); margin-bottom: 16px;">
 
                 <h4>🚀 Getting Started</h4>
-                <p>When you first open the app, it tries to load a bundled Bible translation automatically. If none is found, you will see an upload screen.</p>
+                <p>On first open, a gold welcome screen appears while the app loads a bundled Bible (KJV, WEB, or BSB). When loading finishes you go to the reader. If no package can be loaded (for example offline), the reader still opens and a short notice asks you to check the network.</p>
                 <ul>
-                    <li>Tap <strong>Choose JSON File</strong> and select a valid Bible JSON (structured books → chapters → verses, or a flat list of verses). The file is stored locally so it loads instantly next time.</li>
-                    <li>Once loaded, the <strong>Read</strong> tab becomes your main reading view. Book and chapter dropdowns appear in the header.</li>
-                    <li>Your last book, chapter, and scroll position are remembered automatically—even after closing the app or putting the device to sleep.</li>
+                    <li>After loading, you land on the <strong>Read</strong> tab. Book and chapter dropdowns appear in the top bar.</li>
+                    <li>Your last book, chapter, and scroll position are restored automatically, even after closing the app or locking the screen.</li>
+                    <li>Change translation anytime in <strong>Settings</strong> with the <strong>KJV / WEB / BSB</strong> toggle. Your choice is remembered.</li>
                 </ul>
 
-                <h4>📖 Reading the Bible</h4>
-                <p>The reader shows one chapter at a time with clear verse numbers and readable text.</p>
+                <h4>📖 Reading</h4>
+                <p>One chapter at a time, with verse numbers and clear text.</p>
                 <ul>
-                    <li><strong>Book &amp; chapter selectors</strong> — Use the two pills in the top bar to jump to any book or chapter.</li>
-                    <li><strong>Swipe to change chapter</strong> — On the reading screen, swipe left to go to the next chapter, or swipe right to go to the previous chapter. Swipes work across book boundaries (last chapter of a book → first of the next, and vice versa). At the very beginning or end of the Bible you will see a short toast message.</li>
-                    <li><strong>Auto-hiding bars</strong> — Scroll down and the header and bottom navigation slide away so you get a full-screen reading experience. Tap once anywhere on the page (or on a verse) to bring them back. The last verse you were looking at stays visible.</li>
-                    <li><strong>Tap a verse that already has a note</strong> — Opens that note in a quick view drawer so you can read your reflection without hunting for it.</li>
+                    <li><strong>Book &amp; chapter</strong> — Use the two pills in the header to jump anywhere.</li>
+                    <li><strong>Swipe chapters</strong> — Swipe left for next chapter, right for previous. Works across books. A toast appears at the very start or end of the Bible.</li>
+                    <li><strong>Full-screen reading</strong> — Scroll down to hide the header and bottom tabs. Tap the page once to bring them back.</li>
+                    <li><strong>Open a verse note</strong> — Tap a verse that already has a note (left accent border) to open it quickly.</li>
                 </ul>
 
-                <h4>📋 Quick Verse Copy</h4>
-                <p>Tap directly on any <strong>verse number</strong> (the small blue number at the start of the verse). The full reference and text (e.g. “John 3:16 – For God so loved…”) is copied to your clipboard instantly, and a toast confirms the copy.</p>
-
-                <h4>⚙️ Long-Press Menu (Verse Actions)</h4>
-                <p>Press and hold on the <em>body text</em> of any verse (not the number). After a short moment the verse highlights and a bottom action sheet appears with these options:</p>
+                <h4>📋 Copying Verses</h4>
+                <p>Every copy includes the active version tag so quotes stay clear (e.g. <strong>John 3:16 (KJV)</strong>, <strong>John 3:16 (WEB)</strong>, or <strong>John 3:16 (BSB)</strong>).</p>
                 <ul>
-                    <li><strong>Multi-verse copy</strong> — Enters selection mode. Tap any verses you want (they highlight). Use the bottom bar to Copy Selected or Cancel. Copied text is neatly grouped by book and chapter with smart ranges (e.g. “Genesis 1:1-5, 8”).</li>
-                    <li><strong>Add note / Edit note</strong> — Opens a notepad drawer linked to that exact verse. Type freely; notes autosave. Verses that have a note get a subtle left border so you can spot them later. Tapping a noted verse opens the note in view mode; use Edit to change it.</li>
-                    <li><strong>Highlight text</strong> — Cycles through yellow → green → blue → pink → none. Highlights are saved and restored every time you open that chapter.</li>
-                    <li><strong>Underline verse</strong> — Toggles a clear underline on the verse for quick visual emphasis. Also saved permanently.</li>
-                    <li><strong>Search dictionary</strong> — Opens an external dictionary / study resource in a new browser tab so you can look up words or the passage.</li>
-                    <li><strong>Cross references</strong> — Opens a bottom sheet of related verses (OpenBible data). See the dedicated section below for full details.</li>
-                    <li><strong>Strong's concordance</strong> — Opens the verse with every word that carries a Strong's number underlined and tappable. See the Strong's section below.</li>
+                    <li><strong>Single verse</strong> — Tap the blue <strong>verse number</strong>. Clipboard gets reference, version, and text. A toast confirms.</li>
+                    <li><strong>Several verses</strong> — Long-press a verse → <strong>Multi-verse copy</strong> → tap the verses you want → <strong>Copy Selected</strong>. References are grouped by book/chapter with ranges (e.g. Genesis 1:1-5, 8 (KJV)).</li>
+                    <li><strong>From cross-references</strong> — Long-press one result, or use multi-select and Copy. Same version tag is added.</li>
                 </ul>
-                <p>Tap outside the menu or tap the same verse again to dismiss it.</p>
 
-                <h4>📖 Strong's Concordance</h4>
-                <p>From the long-press menu choose <strong>Strong's concordance</strong>. A sheet shows the full verse text.</p>
+                <h4>👆 Long-Press Menu</h4>
+                <p>Press and hold the <em>text</em> of a verse (not the number). A bottom sheet opens:</p>
                 <ul>
-                    <li>Words that have a Strong's number are underlined in the primary colour.</li>
-                    <li><strong>Tap any underlined word</strong> — Opens a full offline dictionary card with: Strong's number (H… Hebrew / G… Greek), original-language spelling, transliteration, definition, KJV English meanings, the English word as it appears in this verse, and any Tense/Voice/Mood markers.</li>
-                    <li>Requires <code>kjv_strongs.json</code> (verse markup) and <code>strongs_dict.json</code> (Hebrew &amp; Greek lexicon) next to the app, just like crossrefs.json. No internet needed.</li>
+                    <li><strong>Multi-verse copy</strong> — Select and copy several verses (see above).</li>
+                    <li><strong>Add note / Edit note</strong> — Note tied to that verse. Saves as you type. Noted verses show a left border; tap them later to reopen.</li>
+                    <li><strong>Highlight</strong> — Cycles yellow → green → blue → pink → off. Saved per verse.</li>
+                    <li><strong>Underline</strong> — Toggle underline for emphasis. Saved per verse.</li>
+                    <li><strong>Search dictionary</strong> — Opens a dictionary / study page in the browser.</li>
+                    <li><strong>Cross references</strong> — Related verses (details below).</li>
+                    <li><strong>Strong's concordance</strong> — Word-level Strong's lookup (details below).</li>
                 </ul>
+                <p>Dismiss by tapping outside the menu or the same verse again.</p>
 
                 <h4>🔗 Cross References</h4>
-                <p>From the long-press menu choose <strong>Cross references</strong>. A sheet lists parallel and related verses ranked by strength (stars).</p>
+                <p>Long-press a verse → <strong>Cross references</strong>. Related verses appear in a sheet (ranked by strength).</p>
                 <ul>
-                    <li><strong>Single tap</strong> a result — Expands or collapses the full verse text in place so you can read it without leaving the list.</li>
-                    <li><strong>Double-tap</strong> a result — Jumps straight to that verse in the main reader and briefly highlights it.</li>
-                    <li><strong>Long-press</strong> a result — Copies that single verse (reference + text) to the clipboard.</li>
-                    <li><strong>Multi-select icon</strong> (copy-check) at the top — Lets you select several cross-references and copy them all at once. A footer shows the count and Copy / Cancel buttons.</li>
-                    <li><strong>Sticky-note icon</strong> — Opens the independent Notepad tab without closing the sheet first.</li>
-                    <li>Close the sheet with the X or by tapping the dimmed area outside it.</li>
+                    <li><strong>Tap once</strong> — Expand or collapse the verse text in the list.</li>
+                    <li><strong>Double-tap</strong> — Jump to that verse in the reader (brief highlight).</li>
+                    <li><strong>Long-press</strong> — Copy that verse with reference and version tag.</li>
+                    <li><strong>Multi-select</strong> (copy-check icon) — Select several, then Copy or Cancel.</li>
+                    <li><strong>Sticky-note icon</strong> — Open the independent Notepad tab.</li>
+                    <li>Close with X or by tapping the dimmed area outside.</li>
+                </ul>
+                <p>If cross-reference data is not installed, the sheet says so; everything else still works.</p>
+
+                <h4>📖 Strong's Concordance</h4>
+                <p>Long-press a verse → <strong>Strong's concordance</strong>.</p>
+                <ul>
+                    <li>Words with a Strong's number are underlined.</li>
+                    <li><strong>Tap an underlined word</strong> for the offline card: Strong's number (H… / G…), original form, transliteration, definition, English glosses, and any grammar markers.</li>
+                    <li>Needs <code>kjv_strongs.json</code> and <code>strongs_dict.json</code> beside the app (offline; no internet).</li>
                 </ul>
 
                 <h4>🔍 Search</h4>
-                <p>Switch to the <strong>Search</strong> tab at the bottom.</p>
+                <p>Use the <strong>Search</strong> tab at the bottom.</p>
                 <ul>
-                    <li>Type a word or phrase (at least 3 characters) and tap Search or press Enter.</li>
-                    <li>Results show every matching verse across the whole Bible. Matching words are highlighted in yellow inside the preview.</li>
-                    <li>Tap any result to jump to that exact verse in the reader; the verse is briefly highlighted so you can find it easily.</li>
-                    <li>The search box stays fixed at the top while you scroll results. Clearing the search box resets the scroll position for next time.</li>
+                    <li>Enter at least 3 characters, then Search or Enter.</li>
+                    <li>Matches are whole words / phrases across the loaded Bible; hits are highlighted in the preview.</li>
+                    <li>Tap a result to open that verse in the reader (brief highlight).</li>
+                    <li>The search box stays fixed while results scroll. Clearing the box resets scroll for next time.</li>
                 </ul>
 
-                <h4>📝 Notepad (Independent Notes)</h4>
-                <p>The <strong>Notepad</strong> tab is a free-form jotter separate from verse-linked notes.</p>
+                <h4>📝 Notepad</h4>
+                <p>Free-form notes, separate from verse-linked notes. Use the <strong>Notepad</strong> tab.</p>
                 <ul>
-                    <li><strong>New Note</strong> — Creates a blank note with a title field and body. Notes autosave while you type (when in edit mode).</li>
-                    <li>Tap a card in the list to open it in view mode. Use the pencil icon to edit, the trash icon to delete (with confirmation), or the PDF icon to export / share.</li>
-                    <li><strong>Share as PDF</strong> — Generates a clean PDF of the note. On supported devices the system share sheet appears so you can send it; otherwise the file downloads.</li>
-                    <li>Empty new notes that you never typed in are discarded automatically when you go back to the list.</li>
-                    <li>All notepad entries are stored on your device and survive app restarts.</li>
+                    <li><strong>New Note</strong> — Title + body. Autosaves while you edit.</li>
+                    <li>Tap a card to open (view mode). Pencil to edit, trash to delete, PDF to export/share.</li>
+                    <li><strong>Share as PDF</strong> — Builds a simple PDF; uses the system share sheet when available, otherwise downloads the file.</li>
+                    <li>Empty new notes you never typed in are discarded when you go back.</li>
+                    <li>Stored only on your device.</li>
                 </ul>
 
                 <h4>⚙️ Settings</h4>
                 <ul>
-                    <li><strong>How to Use App Functions</strong> — Opens this guide (you are here). Use the back link at the top to return to Settings.</li>
-                    <li><strong>Clear Database</strong> — Permanently removes the loaded Bible translation and resets highlights, verse notes, underlines, and reading position. You will need to load a JSON file again (or let the app try the bundled file). Use this when you want to switch to a different translation.</li>
+                    <li><strong>How to Use App Functions</strong> — Opens this guide. Use <strong>Back to Settings</strong> to return.</li>
+                    <li><strong>Bible Translation (KJV / WEB / BSB)</strong>
+                        <ul>
+                            <li><strong>KJV</strong> — King James Version</li>
+                            <li><strong>WEB</strong> — World English Bible</li>
+                            <li><strong>BSB</strong> — Berean Standard Bible</li>
+                        </ul>
+                        Switching loads that text and keeps your place when possible. Highlights and notes use the same book layout, so they largely carry across.
+                    </li>
+                    <li><strong>Update App</strong> — Checks for a newer service worker (<code>sw.js</code>). If found: updates, shows “Updated to latest version,” and reloads. If not: “No newer version.” The app also checks for updates in the background when you return to it.</li>
                 </ul>
 
-                <h4>💡 Tips &amp; Little Details</h4>
+                <h4>💡 Tips</h4>
                 <ul>
-                    <li>Everything important (highlights, underlines, verse notes, independent notepad entries, last reading place) is saved locally on your device—no account required.</li>
-                    <li>The green <strong>Donate</strong> button in the header opens a support page in your browser if you wish to contribute.</li>
-                    <li>When the app is embedded inside another portal, layout automatically adjusts so nothing is clipped.</li>
-                    <li>If cross-reference data is missing (offline or not bundled), the sheet will simply say the data is unavailable; the rest of the app continues to work normally.</li>
+                    <li>Highlights, underlines, verse notes, notepad entries, reading position, and translation choice stay on your device—no account needed.</li>
+                    <li>Copied quotes always include the version tag so you know which translation you used.</li>
+                    <li>The green <strong>Donate</strong> button in the header opens a support page if you want to give.</li>
+                    <li>Inside another portal (iframe), layout adjusts so bars and safe areas are not doubled or clipped.</li>
                 </ul>
             </div>
         </div>
@@ -1553,6 +1710,7 @@
         }
 
         let bibleData = null;
+        let currentTranslation = localStorage.getItem('bible_translation') || 'kjv'; // 'kjv' | 'web' | 'bsb'
         let selectedVerseKey = null; 
         let highlights = JSON.parse(localStorage.getItem('bible_highlights') || '{}');
         let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
@@ -2114,10 +2272,10 @@
                     
                     const bookName = bibleData[bIdx].name;
                     const chNum = parseInt(cIdx) + 1;
-                    const formattedString = `${bookName} ${chNum}:${vNum} - ${cleanText}`;
+                    const formattedString = `${bookName} ${chNum}:${vNum} (${translationTag()}) - ${cleanText}`;
                     
                     navigator.clipboard.writeText(formattedString).then(() => {
-                        showToast(`Copied ${bookName} ${chNum}:${vNum}`);
+                        showToast(`Copied ${bookName} ${chNum}:${vNum} (${translationTag()})`);
                     }).catch(err => {
                         console.error('Clipboard copy failed: ', err);
                     });
@@ -2345,8 +2503,8 @@
                         }
                     }
 
-                    // Format reference header (e.g. "Exodus 1:2-7; 10")
-                    const formattedRef = `${bookName} ${chapterNum}:${segments.join(', ')}`;
+                    // Format reference header (e.g. "Exodus 1:2-7, 10 (KJV)")
+                    const formattedRef = `${bookName} ${chapterNum}:${segments.join(', ')} (${translationTag()})`;
                     fullCopiedText += `${formattedRef}\n\n`;
 
                     // Add content verses 
@@ -2596,7 +2754,7 @@
                         if (singleTapTimer) { clearTimeout(singleTapTimer); singleTapTimer = null; }
                         item.style.backgroundColor = 'var(--md-secondary-container)';
                         const text = getVerseText(item.dataset.book, +item.dataset.chapter, +item.dataset.verse);
-                        const refLabel = `${item.dataset.book} ${item.dataset.chapter}:${item.dataset.verse}`;
+                        const refLabel = `${item.dataset.book} ${item.dataset.chapter}:${item.dataset.verse} (${translationTag()})`;
                         const payload = text ? `${refLabel} — ${text}` : refLabel;
                         navigator.clipboard.writeText(payload).then(() => {
                             showToast(`Copied ${refLabel}`);
@@ -2724,7 +2882,7 @@
             });
             const lines = ordered.map(r => {
                 const fullText = getVerseText(r.book, r.chapter, r.verse);
-                const refLabel = `${r.book} ${r.chapter}:${r.verse}`;
+                const refLabel = `${r.book} ${r.chapter}:${r.verse} (${translationTag()})`;
                 return fullText ? `${refLabel} — ${fullText}` : refLabel;
             });
             const payload = lines.join('\n\n');
@@ -3137,6 +3295,14 @@
             el.className = `verse-layout ${highlightClass} ${noteClass} ${underlineClass} ${tempClass} ${multiClass}`.trim().replace(/\s+/g, ' ');
         }
 
+        /** Hide the gold startup splash so it cannot bleed into the reader */
+        function dismissLoadingSplash() {
+            const splash = document.getElementById('uploadPanel');
+            if (!splash) return;
+            splash.classList.remove('active');
+            splash.classList.add('splash-done');
+        }
+
         // Interface Switcher (Reader, Search, Settings, Help Guide)
         function switchPanel(panelId) {
             if (isMultiSelectMode) {
@@ -3148,6 +3314,10 @@
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             hideOptionsMenu();
             showBars();
+            // Never leave the startup splash visible over other panels
+            if (panelId !== 'upload') {
+                dismissLoadingSplash();
+            }
 
             if (panelId === 'notepad') {
                 document.getElementById('notepadPanel').classList.add('active');
@@ -3162,7 +3332,9 @@
             }
 
             if (!bibleData) {
-                document.getElementById('uploadPanel').classList.add('active');
+                // Prefer reader over the splash when data is missing (e.g. offline)
+                document.getElementById('readerPanel').classList.add('active');
+                document.getElementById('tabRead').classList.add('active');
                 headerDropdowns.style.display = "none";
                 appTitle.style.display = "block";
                 appTitle.textContent = "Holy Bible";
@@ -3599,80 +3771,246 @@
             }
         });
 
-        // Data Management Workflows
-        document.getElementById('btnClearData').onclick = async () => {
-            if (confirm("Are you sure you want to completely clear the loaded Bible database? All configurations will reset.")) {
-                const db = await openDB();
-                const tx = db.transaction("modules", "readwrite");
-                tx.objectStore("modules").clear();
-                tx.oncomplete = () => {
-                    bibleData = null;
-                    highlights = {};
-                    notes = {};
-                    underlines = {};
-                    readingState = {};
-                    localStorage.removeItem('bible_highlights');
-                    localStorage.removeItem('bible_notes');
-                    localStorage.removeItem('bible_underlines');
-                    localStorage.removeItem('bible_reading_state');
-                    switchPanel('reader');
-                };
+        // Manual "Update App" — checks for a newer service worker (sw.js)
+        async function checkForAppUpdate() {
+            const btn = document.getElementById('btnUpdateApp');
+            if (!('serviceWorker' in navigator)) {
+                showToast('No newer version');
+                return;
             }
+            // Embedded in parent iframe — parent owns the SW
+            try {
+                if (window.self !== window.top) {
+                    showToast('No newer version');
+                    return;
+                }
+            } catch (_) {
+                showToast('No newer version');
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+            try {
+                let reg = await navigator.serviceWorker.getRegistration();
+                if (!reg) {
+                    // Attempt registration then re-check (keeps prior auto-register path intact)
+                    try {
+                        reg = await navigator.serviceWorker.register('sw.js');
+                    } catch (_) {
+                        showToast('No newer version');
+                        return;
+                    }
+                }
+
+                const hadWaiting = !!reg.waiting;
+                let updateFound = hadWaiting;
+                const onUpdateFound = () => { updateFound = true; };
+                reg.addEventListener('updatefound', onUpdateFound);
+
+                // Ask the browser to check the server for a newer sw.js
+                await reg.update();
+
+                // Allow install to progress if a new worker was fetched
+                await new Promise((r) => setTimeout(r, 600));
+
+                const newWorker = reg.waiting || reg.installing;
+                if (newWorker || updateFound) {
+                    // Wait until the new worker finishes installing
+                    if (newWorker && newWorker.state === 'installing') {
+                        await new Promise((resolve) => {
+                            const done = () => {
+                                if (newWorker.state === 'installed' || newWorker.state === 'activated') {
+                                    newWorker.removeEventListener('statechange', done);
+                                    resolve();
+                                }
+                            };
+                            newWorker.addEventListener('statechange', done);
+                            // Safety timeout
+                            setTimeout(resolve, 4000);
+                        });
+                    }
+
+                    showToast('Updated to latest version');
+
+                    // Activate waiting worker if the SW supports skipWaiting messaging
+                    const waiting = reg.waiting || (newWorker && newWorker.state === 'installed' ? newWorker : null);
+                    if (waiting) {
+                        try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (_) {}
+                    }
+
+                    // Reload once the new controller takes over (or after a short fallback delay)
+                    let reloaded = false;
+                    const doReload = () => {
+                        if (reloaded) return;
+                        reloaded = true;
+                        window.location.reload();
+                    };
+                    navigator.serviceWorker.addEventListener('controllerchange', doReload, { once: true });
+                    setTimeout(doReload, 1200);
+                } else {
+                    showToast('No newer version');
+                }
+
+                reg.removeEventListener('updatefound', onUpdateFound);
+            } catch (err) {
+                console.error('Update check failed', err);
+                showToast('No newer version');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        const btnUpdateApp = document.getElementById('btnUpdateApp');
+        if (btnUpdateApp) btnUpdateApp.onclick = () => checkForAppUpdate();
+
+        // ========== Translation switcher (KJV / WEB / BSB) ==========
+        const TRANS_LABELS = {
+            kjv: 'King James Version',
+            web: 'World English Bible',
+            bsb: 'Berean Standard Bible'
         };
+        const TRANS_FILES = {
+            kjv: 'kjv.json',
+            web: 'web.json',
+            bsb: 'bsb.json'
+        };
+        const TRANS_ORDER = ['kjv', 'web', 'bsb'];
+
+        /** Short tag for citations, e.g. "KJV", "WEB", "BSB" */
+        function translationTag() {
+            const t = (currentTranslation || 'kjv').toLowerCase();
+            if (TRANS_FILES[t]) return t.toUpperCase();
+            return 'KJV';
+        }
+
+        function updateTranslationToggleUI() {
+            document.querySelectorAll('.trans-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.trans === currentTranslation);
+            });
+        }
+
+        async function loadBundledTranslation(trans) {
+            const file = TRANS_FILES[trans] || 'kjv.json';
+            const response = await fetch(file);
+            if (!response.ok) throw new Error('Failed to fetch ' + file);
+            const parsed = await response.json();
+            if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
+                return parsed;
+            }
+            let flatVerses = Array.isArray(parsed) ? parsed : (parsed.verses || []);
+            if (flatVerses.length > 0) {
+                return normalizeLayoutStructure(flatVerses);
+            }
+            throw new Error('Empty or invalid JSON structure');
+        }
+
+        async function switchTranslation(trans) {
+            if (!TRANS_FILES[trans]) trans = 'kjv';
+            if (trans === currentTranslation && bibleData) {
+                updateTranslationToggleUI();
+                return;
+            }
+            try {
+                showToast('Loading ' + (trans.toUpperCase()) + '…');
+                const data = await loadBundledTranslation(trans);
+                bibleData = data;
+                currentTranslation = trans;
+                localStorage.setItem('bible_translation', trans);
+                await saveToDB(bibleData);
+                // Keep book/chapter indices when possible (same 66-book layout)
+                isRestoringState = true;
+                initPresentationEngine();
+                switchPanel('reader');
+                isRestoringState = false;
+                updateTranslationToggleUI();
+                showToast(TRANS_LABELS[trans] || trans.toUpperCase());
+                notifyParentReady();
+            } catch (err) {
+                console.error('Translation switch failed', err);
+                showToast('Could not load ' + (trans.toUpperCase()));
+            }
+        }
+
+        document.getElementById('btnTransKjv').onclick = () => switchTranslation('kjv');
+        document.getElementById('btnTransWeb').onclick = () => switchTranslation('web');
+        document.getElementById('btnTransBsb').onclick = () => switchTranslation('bsb');
 
         // Automatic DB Initial State Probe & Auto-load Pipeline
+        // Startup shows the gold loading splash (#uploadPanel.loading-screen), then opens the reader.
         window.addEventListener('DOMContentLoaded', async () => {
             // Apply lucide icons dynamically
             if(typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
+            updateTranslationToggleUI();
+
+            // Ensure splash is visible while loading
+            const splash = document.getElementById('uploadPanel');
+            if (splash) {
+                document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+                splash.classList.add('active', 'loading-screen');
+            }
+            const logoImg = document.getElementById('loadingAppLogo');
+            if (logoImg) {
+                logoImg.onerror = function () {
+                    this.onerror = null;
+                    this.removeAttribute('src');
+                    this.style.display = 'none';
+                    const wrap = this.parentElement;
+                    if (wrap && !wrap.querySelector('.loading-logo-fallback')) {
+                        const fb = document.createElement('div');
+                        fb.className = 'loading-logo-fallback';
+                        fb.textContent = '📖';
+                        fb.style.cssText = 'font-size:56px;line-height:1;';
+                        wrap.appendChild(fb);
+                    }
+                };
+            }
+
+            const openReaderReady = () => {
+                dismissLoadingSplash();
+                isRestoringState = true;
+                initPresentationEngine();
+                switchPanel('reader');
+                isRestoringState = false;
+                updateTranslationToggleUI();
+                notifyParentReady();
+            };
+
             try {
                 // 1. Check if we already have a Bible cached in database
                 const cachedData = await loadFromDB();
                 if (cachedData) {
                     bibleData = cachedData;
-                    isRestoringState = true;
-                    initPresentationEngine(); // restores book + chapter + scroll
-                    // Bible reader is the default startup view
-                    switchPanel('reader');
-                    isRestoringState = false;
-                    notifyParentReady();
+                    openReaderReady();
                     return;
                 }
                 
-                // 2. If empty, try to auto-load the bundled "kjv.json" from inside the APK
-                const response = await fetch('kjv.json');
-                if (response.ok) {
-                    const parsed = await response.json();
-                    
-                    // Normalize structure if it's a flat format
-                    if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
-                        bibleData = parsed;
-                    } else {
-                        let flatVerses = Array.isArray(parsed) ? parsed : (parsed.verses || []);
-                        if(flatVerses.length > 0) {
-                            bibleData = normalizeLayoutStructure(flatVerses);
-                        } else {
-                            throw new Error("Empty JSON structure");
-                        }
-                    }
-                    
-                    // Save to local IndexedDB database so it loads instantly next time
-                    await saveToDB(bibleData);
-                    isRestoringState = true;
-                    initPresentationEngine();
-                    // Bible reader is the default startup view
+                // 2. If empty, try preferred bundled translation, then others
+                const preferred = TRANS_FILES[currentTranslation] ? currentTranslation : 'kjv';
+                const tryOrder = [preferred, ...TRANS_ORDER.filter(t => t !== preferred)];
+                let loaded = false;
+                for (const t of tryOrder) {
+                    try {
+                        bibleData = await loadBundledTranslation(t);
+                        currentTranslation = t;
+                        localStorage.setItem('bible_translation', t);
+                        await saveToDB(bibleData);
+                        openReaderReady();
+                        loaded = true;
+                        break;
+                    } catch (e) { /* try next */ }
+                }
+                if (!loaded) {
+                    // No package / offline: still open reader and notify
                     switchPanel('reader');
-                    isRestoringState = false;
-                    notifyParentReady();
-                } else {
-                    // Fallback to upload panel if kjv.json isn't bundled
-                    switchPanel('upload');
+                    showToast('No Available Package - check network');
                     notifyParentReady();
                 }
             } catch (err) {
-                console.log("Could not auto-load bundled KJV, showing manual upload instead.");
-                switchPanel('upload');
+                console.log("Could not auto-load bundled Bible.", err);
+                switchPanel('reader');
+                showToast('No Available Package - check network');
                 notifyParentReady();
             }
         });
@@ -3689,15 +4027,39 @@
         document.addEventListener('freeze', saveReadingState);
     </script>
 <script>
-// Register service worker only when running as top-level document (not inside parent iframe)
+// Register service worker only when running as top-level document (not inside parent iframe).
+// Retains automatic update checks on navigation/focus; Settings → Update App triggers a manual check.
 (function () {
   try {
     if (window.self !== window.top) return; // embedded — parent app owns the SW
   } catch (_) { return; }
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log("SW Registered"));
-  }
+  if (!('serviceWorker' in navigator)) return;
+
+  navigator.serviceWorker.register('sw.js')
+    .then((reg) => {
+      console.log("SW Registered");
+      // Periodic / lifecycle auto-update probe (browser also checks on navigation)
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version ready in the background; user can apply via Update App
+            console.log('New service worker installed and waiting');
+          }
+        });
+      });
+    })
+    .catch((err) => console.log("SW registration failed", err));
+
+  // Re-check when the app returns to the foreground
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) reg.update().catch(() => {});
+      });
+    }
+  });
 })();
 </script>
 </body>
