@@ -1592,12 +1592,13 @@
             <div class="settings-row">
                 <div>
                     <p style="font-weight: 500;">Bible Translation</p>
-                    <p style="font-size: 12px; color: var(--md-text-muted);">Switch between KJV, WEB, and BSB.</p>
+                    <p style="font-size: 12px; color: var(--md-text-muted);">Switch between KJV, WEB, BSB, and YLT.</p>
                 </div>
                 <div class="translation-toggle" id="translationToggle">
                     <button type="button" class="trans-btn active" data-trans="kjv" id="btnTransKjv">KJV</button>
                     <button type="button" class="trans-btn" data-trans="web" id="btnTransWeb">WEB</button>
                     <button type="button" class="trans-btn" data-trans="bsb" id="btnTransBsb">BSB</button>
+                    <button type="button" class="trans-btn" data-trans="youngs" id="btnTransYoungs">YLT</button>
                 </div>
             </div>
 
@@ -1619,11 +1620,11 @@
                 <hr style="border: 0; border-top: 1px solid var(--md-surface-variant); margin-bottom: 16px;">
 
                 <h4>🚀 Getting Started</h4>
-                <p>On first open, a gold welcome screen appears while the app loads a bundled Bible (KJV, WEB, or BSB). When loading finishes you go to the reader. If no package can be loaded (for example offline), the reader still opens and a short notice asks you to check the network.</p>
+                <p>On first open, a gold welcome screen appears while the app loads a bundled Bible (KJV, WEB, BSB, or YLT). When loading finishes you go to the reader. If no package can be loaded (for example offline), the reader still opens and a short notice asks you to check the network.</p>
                 <ul>
                     <li>After loading, you land on the <strong>Read</strong> tab. Book and chapter dropdowns appear in the top bar.</li>
                     <li>Your last book, chapter, and scroll position are restored automatically, even after closing the app or locking the screen.</li>
-                    <li>Change translation anytime in <strong>Settings</strong> with the <strong>KJV / WEB / BSB</strong> toggle. Your choice is remembered.</li>
+                    <li>Change translation anytime in <strong>Settings</strong> with the <strong>KJV / WEB / BSB / YLT</strong> toggle. Your choice is remembered.</li>
                 </ul>
 
                 <h4>📖 Reading</h4>
@@ -1698,11 +1699,12 @@
                 <h4>⚙️ Settings</h4>
                 <ul>
                     <li><strong>How to Use App Functions</strong> — Opens this guide. Use <strong>Back to Settings</strong> to return.</li>
-                    <li><strong>Bible Translation (KJV / WEB / BSB)</strong>
+                    <li><strong>Bible Translation (KJV / WEB / BSB / YLT)</strong>
                         <ul>
                             <li><strong>KJV</strong> — King James Version</li>
                             <li><strong>WEB</strong> — World English Bible</li>
                             <li><strong>BSB</strong> — Berean Standard Bible</li>
+                            <li><strong>YLT</strong> — Young's Literal Translation</li>
                         </ul>
                         Switching loads that text and keeps your place when possible. Highlights and notes use the same book layout, so they largely carry across.
                     </li>
@@ -1896,7 +1898,7 @@
         }
 
         let bibleData = null;
-        let currentTranslation = localStorage.getItem('bible_translation') || 'kjv'; // 'kjv' | 'web' | 'bsb'
+        let currentTranslation = localStorage.getItem('bible_translation') || 'kjv'; // 'kjv' | 'web' | 'bsb' | 'youngs'
         let selectedVerseKey = null; 
         let highlights = JSON.parse(localStorage.getItem('bible_highlights') || '{}');
         let notes = JSON.parse(localStorage.getItem('bible_notes') || '{}');
@@ -4590,22 +4592,25 @@
         const btnUpdateApp = document.getElementById('btnUpdateApp');
         if (btnUpdateApp) btnUpdateApp.onclick = () => checkForAppUpdate();
 
-        // ========== Translation switcher (KJV / WEB / BSB) ==========
+        // ========== Translation switcher (KJV / WEB / BSB / YLT) ==========
         const TRANS_LABELS = {
             kjv: 'King James Version',
             web: 'World English Bible',
-            bsb: 'Berean Standard Bible'
+            bsb: 'Berean Standard Bible',
+            youngs: "Young's Literal Translation"
         };
         const TRANS_FILES = {
             kjv: 'kjv.json',
             web: 'web.json',
-            bsb: 'bsb.json'
+            bsb: 'bsb.json',
+            youngs: 'youngs.json'
         };
-        const TRANS_ORDER = ['kjv', 'web', 'bsb'];
+        const TRANS_ORDER = ['kjv', 'web', 'bsb', 'youngs'];
 
-        /** Short tag for citations, e.g. "KJV", "WEB", "BSB" */
+        /** Short tag for citations, e.g. "KJV", "WEB", "BSB", "YLT" */
         function translationTag() {
             const t = (currentTranslation || 'kjv').toLowerCase();
+            if (t === 'youngs') return 'YLT';
             if (TRANS_FILES[t]) return t.toUpperCase();
             return 'KJV';
         }
@@ -4638,7 +4643,8 @@
                 return;
             }
             try {
-                showToast('Loading ' + (trans.toUpperCase()) + '…');
+                const shortTag = (trans === 'youngs') ? 'YLT' : trans.toUpperCase();
+                showToast('Loading ' + shortTag + '…');
                 const data = await loadBundledTranslation(trans);
                 bibleData = data;
                 currentTranslation = trans;
@@ -4650,17 +4656,18 @@
                 switchPanel('reader');
                 isRestoringState = false;
                 updateTranslationToggleUI();
-                showToast(TRANS_LABELS[trans] || trans.toUpperCase());
+                showToast(TRANS_LABELS[trans] || shortTag);
                 notifyParentReady();
             } catch (err) {
                 console.error('Translation switch failed', err);
-                showToast('Could not load ' + (trans.toUpperCase()));
+                showToast('Could not load ' + ((trans === 'youngs') ? 'YLT' : trans.toUpperCase()));
             }
         }
 
         document.getElementById('btnTransKjv').onclick = () => switchTranslation('kjv');
         document.getElementById('btnTransWeb').onclick = () => switchTranslation('web');
         document.getElementById('btnTransBsb').onclick = () => switchTranslation('bsb');
+        document.getElementById('btnTransYoungs').onclick = () => switchTranslation('youngs');
 
         // Automatic DB Initial State Probe & Auto-load Pipeline
         // Startup shows the gold loading splash (#uploadPanel.loading-screen), then opens the reader.
