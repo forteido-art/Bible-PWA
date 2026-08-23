@@ -618,6 +618,10 @@
         .search-result-item:last-child {
             margin-bottom: 24px; /* Extra clearance so last result is never cut off by bottom nav */
         }
+        .search-result-item.search-selected {
+            background-color: rgba(168, 199, 250, 0.3) !important;
+            border-left: 4px solid var(--md-primary);
+        }
         .search-result-title {
             font-size: 13px; color: var(--md-primary); font-weight: bold; margin-bottom: 4px;
         }
@@ -1920,6 +1924,10 @@
         let isMultiSelectMode = false;
         let multiSelectedVerses = {}; // Maps key string -> boolean
 
+        // Search results multi-copy states
+        let isSearchMultiSelectMode = false;
+        let searchMultiSelected = {}; // Maps key "bIdx_cIdx_vIdx" -> boolean
+
         // DOM nodes references 
         const bookSelect = document.getElementById('bookSelect');
         const chapterSelect = document.getElementById('chapterSelect');
@@ -2469,12 +2477,24 @@
                 const longPressDuration = 500; // Duration limit in milliseconds
 
                 const startPress = (e) => {
-                    if (isMultiSelectMode) return; // No long press actions while multi-selecting
                     // Do not initiate long press action if clicking specifically on the verse number copy button
                     if (e.target.classList.contains('verse-num')) return;
                     isLongPress = false;
                     pressTimer = setTimeout(() => {
                         isLongPress = true;
+
+                        // Multi-copy mode: long-press toggles verse selection (tap does nothing)
+                        if (isMultiSelectMode) {
+                            if (multiSelectedVerses[key]) {
+                                delete multiSelectedVerses[key];
+                            } else {
+                                multiSelectedVerses[key] = true;
+                            }
+                            updateVerseClasses(key, div);
+                            updateMultiSelectBar();
+                            return;
+                        }
+
                         selectedVerseKey = key;
                         
                         // Clear any previous active temporary highlights
@@ -2496,17 +2516,8 @@
                 };
 
                 const handleTap = (e) => {
-                    if (isMultiSelectMode) {
-                        // In multi-select mode, clicking a verse selects or deselects it
-                        if (multiSelectedVerses[key]) {
-                            delete multiSelectedVerses[key];
-                        } else {
-                            multiSelectedVerses[key] = true;
-                        }
-                        updateVerseClasses(key, div);
-                        updateMultiSelectBar();
-                        return;
-                    }
+                    // Multi-copy: selection is long-press only — tap does nothing
+                    if (isMultiSelectMode) return;
 
                     if (e.target.classList.contains('verse-num')) return;
                     clearTimeout(pressTimer);
@@ -2541,6 +2552,7 @@
                         handleTap(e);
                     }
                 }, { passive: true });
+                // Cancel long-press if finger moves (scroll) so scrolling never selects
                 div.addEventListener('touchmove', cancelPress, { passive: true });
 
                 // Supporting mouse actions for desktop compatibility
@@ -2615,19 +2627,109 @@
             multiSelectCounter.textContent = `${count} ${count === 1 ? 'verse' : 'verses'} selected`;
         }
 
+        // ========== Search results multi-copy helpers ==========
+        // Long-press any result to enter selection (same path for 1 or many); tap more to toggle; Copy or Cancel.
+        function startSearchMultiSelect(initialItem) {
+            if (!document.getElementById('searchPanel')?.classList.contains('active')) return;
+            isSearchMultiSelectMode = true;
+            searchMultiSelected = {};
+            document.querySelectorAll('.search-result-item.search-selected').forEach(el => {
+                el.classList.remove('search-selected');
+            });
+            multiSelectBar.classList.add('show');
+            hideBars();
+            mainContentPanel.classList.remove('bars-hidden');
+            if (initialItem && initialItem.dataset && initialItem.dataset.key) {
+                searchMultiSelected[initialItem.dataset.key] = true;
+                initialItem.classList.add('search-selected');
+            }
+            updateSearchMultiSelectBar();
+            showToast('Long-press or tap more · Copy when ready');
+        }
+
+        function stopSearchMultiSelect() {
+            isSearchMultiSelectMode = false;
+            searchMultiSelected = {};
+            multiSelectBar.classList.remove('show');
+            document.querySelectorAll('.search-result-item.search-selected').forEach(el => {
+                el.classList.remove('search-selected');
+            });
+            showBars();
+            updateSearchMultiSelectBar();
+        }
+
+        function updateSearchMultiSelectBar() {
+            const count = Object.keys(searchMultiSelected).length;
+            multiSelectCounter.textContent = `${count} ${count === 1 ? 'verse' : 'verses'} selected`;
+        }
+
+        function toggleSearchResultSelection(item) {
+            const key = item.dataset.key;
+            if (!key) return;
+            if (searchMultiSelected[key]) {
+                delete searchMultiSelected[key];
+                item.classList.remove('search-selected');
+            } else {
+                searchMultiSelected[key] = true;
+                item.classList.add('search-selected');
+            }
+            updateSearchMultiSelectBar();
+        }
+
+        function copySelectedSearchResults() {
+            const keys = Object.keys(searchMultiSelected);
+            if (keys.length === 0) {
+                showToast('No verses selected');
+                return;
+            }
+            // Preserve visual order from the results list
+            const ordered = [];
+            document.querySelectorAll('.search-result-item').forEach(el => {
+                const key = el.dataset.key;
+                if (key && searchMultiSelected[key]) {
+                    const parts = key.split('_').map(Number);
+                    ordered.push({ bIdx: parts[0], cIdx: parts[1], vIdx: parts[2] });
+                }
+            });
+            const lines = ordered.map(({ bIdx, cIdx, vIdx }) => {
+                const bookName = bibleData[bIdx]?.name || '';
+                const chNum = cIdx + 1;
+                const vNum = vIdx + 1;
+                let text = (bibleData[bIdx]?.chapters[cIdx]?.[vIdx] || '')
+                    .replace(/\{G\d+\}/g, '')
+                    .replace(/\{\([G\d\s)]+\)\}/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                const refLabel = `${bookName} ${chNum}:${vNum} (${translationTag()})`;
+                return text ? `${refLabel} — ${text}` : refLabel;
+            });
+            const payload = lines.join('\n\n');
+            navigator.clipboard.writeText(payload).then(() => {
+                showToast(`Copied ${ordered.length} verse${ordered.length === 1 ? '' : 's'}`);
+                stopSearchMultiSelect();
+            }).catch(() => {
+                showToast('Could not copy');
+            });
+        }
+
         cancelMultiSelectBtn.onclick = () => {
-            stopMultiSelectMode();
+            if (isSearchMultiSelectMode) stopSearchMultiSelect();
+            else stopMultiSelectMode();
         };
 
         // Polished copy system (Formats references dynamically in series & single form)
         confirmMultiCopyBtn.onclick = () => {
+            if (isSearchMultiSelectMode) {
+                copySelectedSearchResults();
+                return;
+            }
             const keys = Object.keys(multiSelectedVerses);
             if (keys.length === 0) {
                 showToast("No verses selected");
                 return;
             }
 
-            // Group selections by Book Index & Chapter Index[cite: 1]
+            // Group selections by Book Index & Chapter Index
             const grouped = {};
             keys.forEach(key => {
                 const parts = key.split('_').map(Number);
@@ -3881,6 +3983,9 @@
             if (isMultiSelectMode) {
                 stopMultiSelectMode();
             }
+            if (isSearchMultiSelectMode) {
+                stopSearchMultiSelect();
+            }
             // Panels keep their own scrollTop (each is an independent overflow container).
             // No save/restore needed on switch — browser preserves it while display:none.
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
@@ -4251,6 +4356,7 @@
         function performSearch() {
             const rawQuery = searchInput.value.trim();
             searchResults.innerHTML = "";
+            if (isSearchMultiSelectMode) stopSearchMultiSelect();
             if (rawQuery.length < 3) {
                 showToast("Enter at least 3 characters");
                 return;
@@ -4270,15 +4376,63 @@
 
                             let cleanText = verseText.replace(/\{G\d+\}/g, "").replace(/\{\([G\d\s)]+\)\}/g, "");
                             const highlightedText = highlightSearchMatches(cleanText, matchRegex);
+                            const key = `${bIdx}_${cIdx}_${vIdx}`;
                             
                             const div = document.createElement('div');
                             div.className = "search-result-item";
+                            div.dataset.key = key;
+                            div.dataset.bIdx = String(bIdx);
+                            div.dataset.cIdx = String(cIdx);
+                            div.dataset.vIdx = String(vIdx);
                             div.innerHTML = `
                                 <div class="search-result-title">${book.name} ${cIdx + 1}:${vIdx + 1}</div>
                                 <div style="font-size: 15px; line-height: 1.5;">${highlightedText}</div>
                             `;
+
+                            // Long-press → select for copy (1 or more; same path). Short tap: toggle if selecting, else open in reader.
+                            let pressTimer = null;
+                            let isLongPress = false;
+                            const LONG_MS = 480;
+
+                            const clearPress = () => {
+                                if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+                            };
+
+                            const startPress = () => {
+                                isLongPress = false;
+                                clearPress();
+                                pressTimer = setTimeout(() => {
+                                    isLongPress = true;
+                                    if (!isSearchMultiSelectMode) {
+                                        startSearchMultiSelect(div);
+                                    } else {
+                                        toggleSearchResultSelection(div);
+                                    }
+                                }, LONG_MS);
+                            };
+
+                            const endPress = () => {
+                                clearPress();
+                            };
+
+                            div.addEventListener('touchstart', startPress, { passive: true });
+                            div.addEventListener('touchend', endPress, { passive: true });
+                            div.addEventListener('touchmove', clearPress, { passive: true });
+                            div.addEventListener('touchcancel', clearPress, { passive: true });
+                            div.addEventListener('mousedown', startPress);
+                            div.addEventListener('mouseup', endPress);
+                            div.addEventListener('mouseleave', clearPress);
                             
-                            div.onclick = () => {
+                            div.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (isLongPress) return;
+
+                                if (isSearchMultiSelectMode) {
+                                    toggleSearchResultSelection(div);
+                                    return;
+                                }
+
                                 bookSelect.value = bIdx;
                                 populateChapters();
                                 chapterSelect.value = cIdx;
@@ -4297,7 +4451,7 @@
                                         }, 2000);
                                     }
                                 }, 150);
-                            };
+                            });
                             resultsFragment.appendChild(div);
                         }
                     });
