@@ -4500,7 +4500,8 @@
             }
         });
 
-        // Manual "Update App" — checks for a newer service worker (sw.js)
+        // Manual "Update App" — checks for a newer service worker (sw.js),
+        // activates it, and forces a full in-place refresh (no close/reopen).
         async function checkForAppUpdate() {
             const btn = document.getElementById('btnUpdateApp');
             if (!('serviceWorker' in navigator)) {
@@ -4519,6 +4520,7 @@
             }
 
             if (btn) btn.disabled = true;
+            let willReload = false;
             try {
                 let reg = await navigator.serviceWorker.getRegistration();
                 if (!reg) {
@@ -4533,49 +4535,66 @@
 
                 const hadWaiting = !!reg.waiting;
                 let updateFound = hadWaiting;
-                const onUpdateFound = () => { updateFound = true; };
+                let installingWorker = null;
+                const onUpdateFound = () => {
+                    updateFound = true;
+                    installingWorker = reg.installing;
+                };
                 reg.addEventListener('updatefound', onUpdateFound);
 
                 // Ask the browser to check the server for a newer sw.js
                 await reg.update();
 
                 // Allow install to progress if a new worker was fetched
-                await new Promise((r) => setTimeout(r, 600));
+                await new Promise((r) => setTimeout(r, 800));
 
-                const newWorker = reg.waiting || reg.installing;
+                const newWorker = reg.waiting || reg.installing || installingWorker;
                 if (newWorker || updateFound) {
                     // Wait until the new worker finishes installing
-                    if (newWorker && newWorker.state === 'installing') {
+                    const workerToWatch = reg.installing || installingWorker || (newWorker && newWorker.state === 'installing' ? newWorker : null);
+                    if (workerToWatch && workerToWatch.state === 'installing') {
                         await new Promise((resolve) => {
                             const done = () => {
-                                if (newWorker.state === 'installed' || newWorker.state === 'activated') {
-                                    newWorker.removeEventListener('statechange', done);
+                                if (workerToWatch.state === 'installed' || workerToWatch.state === 'activated') {
+                                    workerToWatch.removeEventListener('statechange', done);
                                     resolve();
                                 }
                             };
-                            newWorker.addEventListener('statechange', done);
+                            workerToWatch.addEventListener('statechange', done);
                             // Safety timeout
-                            setTimeout(resolve, 4000);
+                            setTimeout(resolve, 5000);
                         });
                     }
 
                     showToast('Updated to latest version');
 
-                    // Activate waiting worker if the SW supports skipWaiting messaging
-                    const waiting = reg.waiting || (newWorker && newWorker.state === 'installed' ? newWorker : null);
-                    if (waiting) {
-                        try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (_) {}
+                    // Activate waiting / newly installed worker (SW should handle SKIP_WAITING → skipWaiting())
+                    const activateWorker = (w) => {
+                        if (!w) return;
+                        try { w.postMessage({ type: 'SKIP_WAITING' }); } catch (_) {}
+                    };
+                    activateWorker(reg.waiting);
+                    activateWorker(reg.installing);
+                    if (newWorker && newWorker !== reg.waiting && newWorker !== reg.installing) {
+                        activateWorker(newWorker);
                     }
 
-                    // Reload once the new controller takes over (or after a short fallback delay)
+                    // Full in-place refresh: when new controller takes over, or hard fallback
+                    willReload = true;
                     let reloaded = false;
                     const doReload = () => {
                         if (reloaded) return;
                         reloaded = true;
-                        window.location.reload();
+                        // Force a full navigation so the new SW controls the page immediately
+                        try {
+                            window.location.reload();
+                        } catch (_) {
+                            window.location.href = window.location.href;
+                        }
                     };
                     navigator.serviceWorker.addEventListener('controllerchange', doReload, { once: true });
-                    setTimeout(doReload, 1200);
+                    // Fallback if controllerchange is delayed or SW has no skipWaiting handler
+                    setTimeout(doReload, 1500);
                 } else {
                     showToast('No newer version');
                 }
@@ -4585,7 +4604,8 @@
                 console.error('Update check failed', err);
                 showToast('No newer version');
             } finally {
-                if (btn) btn.disabled = false;
+                // Keep button disabled if a reload is about to run (avoids double-tap)
+                if (btn && !willReload) btn.disabled = false;
             }
         }
 
