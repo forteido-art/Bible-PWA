@@ -2245,7 +2245,9 @@
             });
         }
 
-        // Native System Caching Pipeline 
+        // Native System Caching Pipeline
+        // Each translation is stored under its own key (trans_kjv, trans_web, …)
+        // so switching back to KJV (or any version) works even while another is displayed.
         function openDB() {
             return new Promise((resolve, reject) => {
                 const req = indexedDB.open("AndroidBibleEngine", 2);
@@ -2254,22 +2256,39 @@
                 req.onerror = e => reject(e.target.error);
             });
         }
-        async function saveToDB(data) {
+        function transCacheKey(trans) {
+            const t = (trans || 'kjv').toLowerCase();
+            return 'trans_' + (t === 'youngs' ? 'youngs' : t);
+        }
+        async function saveToDB(data, trans) {
             const db = await openDB();
             return new Promise((resolve, reject) => {
                 const tx = db.transaction("modules", "readwrite");
-                tx.objectStore("modules").put(data, "current_active_meta");
+                const store = tx.objectStore("modules");
+                // Active blob for cold-start compatibility
+                store.put(data, "current_active_meta");
+                // Per-translation cache so any version can be restored offline
+                if (trans) {
+                    store.put(data, transCacheKey(trans));
+                    store.put(String(trans), "active_translation");
+                }
                 tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
             });
         }
-        async function loadFromDB() {
+        async function loadFromDB(key) {
             const db = await openDB();
             return new Promise((resolve) => {
                 const tx = db.transaction("modules", "readonly");
-                const req = tx.objectStore("modules").get("current_active_meta");
+                const req = tx.objectStore("modules").get(key || "current_active_meta");
                 req.onsuccess = () => resolve(req.result);
                 req.onerror = () => resolve(null);
             });
+        }
+        async function loadTranslationFromDB(trans) {
+            const data = await loadFromDB(transCacheKey(trans));
+            if (data && Array.isArray(data) && data.length) return data;
+            return null;
         }
 
         // Setup File Loading Interceptor Pipeline 
@@ -2287,7 +2306,7 @@
                         if(flatVerses.length === 0) throw new Error("Format Mismatch");
                         bibleData = normalizeLayoutStructure(flatVerses);
                     }
-                    await saveToDB(bibleData);
+                    await saveToDB(bibleData, currentTranslation || 'kjv');
                     // New translation – start from beginning
                     readingState = { bookIdx: 0, chapterIdx: 0, scrollTop: 0, searchScrollTop: 0, panel: 'reader' };
                     localStorage.setItem('bible_reading_state', JSON.stringify(readingState));
@@ -4642,18 +4661,27 @@
         }
 
         async function loadBundledTranslation(trans) {
-            const file = TRANS_FILES[trans] || 'kjv.json';
-            const response = await fetch(file);
-            if (!response.ok) throw new Error('Failed to fetch ' + file);
-            const parsed = await response.json();
-            if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
-                return parsed;
+            const t = TRANS_FILES[trans] ? trans : 'kjv';
+            const file = TRANS_FILES[t] || 'kjv.json';
+            // 1) Network / service-worker cache
+            try {
+                const response = await fetch(file);
+                if (!response.ok) throw new Error('Failed to fetch ' + file);
+                const parsed = await response.json();
+                if (Array.isArray(parsed) && parsed[0] && Array.isArray(parsed[0].chapters)) {
+                    return parsed;
+                }
+                let flatVerses = Array.isArray(parsed) ? parsed : (parsed.verses || []);
+                if (flatVerses.length > 0) {
+                    return normalizeLayoutStructure(flatVerses);
+                }
+                throw new Error('Empty or invalid JSON structure');
+            } catch (netErr) {
+                // 2) Fall back to per-translation IndexedDB (e.g. KJV while viewing WEB offline)
+                const cached = await loadTranslationFromDB(t);
+                if (cached) return cached;
+                throw netErr;
             }
-            let flatVerses = Array.isArray(parsed) ? parsed : (parsed.verses || []);
-            if (flatVerses.length > 0) {
-                return normalizeLayoutStructure(flatVerses);
-            }
-            throw new Error('Empty or invalid JSON structure');
         }
 
         async function switchTranslation(trans) {
@@ -4669,7 +4697,7 @@
                 bibleData = data;
                 currentTranslation = trans;
                 localStorage.setItem('bible_translation', trans);
-                await saveToDB(bibleData);
+                await saveToDB(bibleData, trans);
                 // Keep book/chapter indices when possible (same 66-book layout)
                 isRestoringState = true;
                 initPresentationEngine();
@@ -4732,16 +4760,35 @@
             };
 
             try {
-                // 1. Check if we already have a Bible cached in database
-                const cachedData = await loadFromDB();
-                if (cachedData) {
-                    bibleData = cachedData;
+                const preferred = TRANS_FILES[currentTranslation] ? currentTranslation : 'kjv';
+
+                // 1. Prefer the exact translation the user last chose (per-version IndexedDB)
+                let cachedForPreferred = await loadTranslationFromDB(preferred);
+                if (cachedForPreferred) {
+                    bibleData = cachedForPreferred;
+                    currentTranslation = preferred;
                     openReaderReady();
                     return;
                 }
-                
-                // 2. If empty, try preferred bundled translation, then others
-                const preferred = TRANS_FILES[currentTranslation] ? currentTranslation : 'kjv';
+
+                // 2. Legacy single-slot cache (older installs) — use only if it matches preference,
+                //    or if we have no preference-specific cache yet
+                const legacyActive = await loadFromDB('current_active_meta');
+                const storedActiveTrans = await loadFromDB('active_translation');
+                if (legacyActive && Array.isArray(legacyActive) && legacyActive.length) {
+                    // If we know which translation the blob is, align currentTranslation
+                    if (typeof storedActiveTrans === 'string' && TRANS_FILES[storedActiveTrans]) {
+                        currentTranslation = storedActiveTrans;
+                        localStorage.setItem('bible_translation', storedActiveTrans);
+                    }
+                    bibleData = legacyActive;
+                    // Seed per-version cache for future switches (esp. back to KJV)
+                    try { await saveToDB(legacyActive, currentTranslation); } catch (_) {}
+                    openReaderReady();
+                    return;
+                }
+
+                // 3. Network: preferred translation, then others
                 const tryOrder = [preferred, ...TRANS_ORDER.filter(t => t !== preferred)];
                 let loaded = false;
                 for (const t of tryOrder) {
@@ -4749,7 +4796,7 @@
                         bibleData = await loadBundledTranslation(t);
                         currentTranslation = t;
                         localStorage.setItem('bible_translation', t);
-                        await saveToDB(bibleData);
+                        await saveToDB(bibleData, t);
                         openReaderReady();
                         loaded = true;
                         break;

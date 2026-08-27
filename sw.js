@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tkh-bible-v10.2';
+const CACHE_NAME = 'tkh-bible-v10.3';
 const FILES = ["/", "/index.html", "/kjv.json", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 const ASSETS = [
   '/',
